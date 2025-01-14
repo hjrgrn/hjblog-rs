@@ -2,5 +2,19 @@
 name = "hj_blog_rs"
 version = "0.1.0"
 edition = "2021"
+authors = ["hjrgrn <187955624+hjrgrn@users.noreply.github.com>"]
+
+[lib]
+path = "./src/lib.rs"
+
+[[bin]]
+path = "./src/main.rs"
+name = "hjblog"
 
 [dependencies]
+tokio = { version = "1.43.0", features = ["full"] }
+actix-web = "4.9.0"
+serde = { version = "1.0.217", features = ["derive"] }
+
+[dev-dependencies]
+reqwest = "0.12.12"
