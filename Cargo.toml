@@ -3,6 +3,9 @@ name = "hj_blog_rs"
 version = "0.1.0"
 edition = "2021"
 authors = ["hjrgrn <187955624+hjrgrn@users.noreply.github.com>"]
+description = "A blog website written for practing Rust and Actix-web"
+readme = "README.md"
+repository = "https://github.com/hjrgrn/hjblog-rs"
 
 [lib]
 path = "./src/lib.rs"
@@ -15,6 +18,11 @@ name = "hjblog"
 tokio = { version = "1.43.0", features = ["full"] }
 actix-web = "4.9.0"
 serde = { version = "1.0.217", features = ["derive"] }
+tracing = { version = "0.1.41", features = ["log"] }
+tracing-subscriber = { version = "0.3.19", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.3.10"
+tracing-log = "0.2.0"
 
 [dev-dependencies]
 reqwest = "0.12.12"
+once_cell = "1.20.2"
