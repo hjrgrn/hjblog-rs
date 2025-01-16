@@ -1,4 +1,7 @@
-use hj_blog_rs::{startup::run, telemetry::{get_subscriber, init_subscriber}};
+use hj_blog_rs::{
+    startup::run,
+    telemetry::{get_subscriber, init_subscriber},
+};
 use once_cell::sync::Lazy;
 use std::net::TcpListener;
 
