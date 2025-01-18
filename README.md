@@ -14,15 +14,31 @@ The application is not complete and is not meant for running into a production e
 For Ubuntu 24.04:
 
 - [Rust](https://www.rust-lang.org/learn/get-started)
+
 - OpenSSL dev files:
 
 ```bash
 sudo apt install libssl-dev
 ```
 
+- [Docker Engine](https://docs.docker.com/engine/install/): To run the Postgres instance and to deploy the app using Docker.
+
+- [Sqlx Cli](https://crates.io/crates/sqlx-cli): SQLx's associated command-line utility for managing databases.
+
+```bash
+cargo install sqlx-cli --no-default-features --features rustls,postgres
+```
+
+- PostgresSQL Client, the latest version avaible in your distribution repo:
+
+```bash
+sudo apt install postgresql-client-16
+```
+
+
+
 ### Optional Dependencies
 
-- [Docker Engine](https://docs.docker.com/engine/install/): To run the app using Docker.
 
 - [Cargo Audit](https://crates.io/crates/cargo-audit): Tool for auditing dependencies for crates with security vulnerabilities reported to the [RustSec Advisory Database](https://github.com/RustSec/advisory-db/).
 
@@ -52,6 +68,14 @@ Project setup:
 ```bash
 git clone 'https://github.com/hjrgrn/hjblog-rs'
 cd hjblog-rs
+chmod +x ./scripts/*
+./scripts/init_db.sh
+```
+
+*NOTE*: if you have already initialized the database skip `./scripts/init_db.sh` and instead run:
+
+```bash
+docker container start <name_of_the_container>
 ```
 
 Test:
@@ -69,13 +93,13 @@ cargo run
 Run using Docker:
 
 ```bash
-chmod +x ./scripts/*
 ./scripts/build_image.sh
 ./scripts/run_container.sh
 ```
 
 *NOTE*: The scripts are meant to be run inside the root directory of the project.
+
 *NOTE*: The default configuration using Docker is [Local.toml](/configuration/Local.toml), which binds the server
-using the address `0.0.0.0`, if you manage your firewall with Ufw or Firewalld the `5000` of your machine will be exposed
+using the address `0.0.0.0`, if you manage your firewall with Ufw or Firewalld the `5000` port of your machine will be exposed
 to your local network becouse Docker bypasses your firewall rules;
 read [this](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw) for more informations.
