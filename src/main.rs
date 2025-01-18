@@ -3,6 +3,7 @@ use hj_blog_rs::{
     startup::run,
     telemetry::{get_subscriber, init_subscriber},
 };
+use sqlx::postgres::PgPoolOptions;
 use std::{io, net::TcpListener};
 
 #[tokio::main]
@@ -12,6 +13,10 @@ async fn main() -> io::Result<()> {
     let subscriber = get_subscriber("hjblog".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
 
+    let connection_pool = PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy_with(config.database.with_db());
+
     let listener = TcpListener::bind(&config.application.get_full_address())?;
-    run(listener)?.await
+    run(listener, connection_pool)?.await
 }

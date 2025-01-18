@@ -1,9 +1,75 @@
+use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use sqlx::ConnectOptions;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct Settings {
     pub application: ApplicationSettings,
+    pub database: DatabaseSettings,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+pub struct DatabaseSettings {
+    pub username: String,
+    pub password: SecretString,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub port: u16,
+    pub host: String,
+    pub database_name: String,
+    pub require_ssl: bool,
+}
+
+impl DatabaseSettings {
+    /// # `connection_string`
+    ///
+    /// Provides a convinient way to obtain a connection string compatible
+    /// with `sqlx::PgConnection::connect`
+    pub fn connection_string(&self) -> SecretString {
+        SecretString::new(
+            format!(
+                "postgres://{}:{}@{}:{}/{}",
+                self.username,
+                self.password.expose_secret(),
+                self.host,
+                self.port,
+                self.database_name
+            )
+            .into(),
+        )
+    }
+
+    /// # `without_db`
+    ///
+    /// Generates a connection option compatible with `sqlx::PgConnection::connect_with`
+    /// that we will be using in integration test. The database name is ommitted and
+    /// will have to be provided.
+    pub fn without_db(&self) -> PgConnectOptions {
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            // Try an encrypted connection, fallback to unencrypted if it fails
+            PgSslMode::Prefer
+        };
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(&self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
+    }
+
+    /// # `with_db`
+    ///
+    /// Same as `without_db` but with a database.
+    pub fn with_db(&self) -> PgConnectOptions {
+        let options = self
+            .without_db()
+            .database(&self.database_name)
+            .log_statements(tracing_log::log::LevelFilter::Trace);
+        options
+    }
 }
 
 #[derive(Clone, Deserialize, Debug)]
