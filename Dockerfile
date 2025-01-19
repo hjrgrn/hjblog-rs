@@ -17,5 +17,6 @@ RUN apt update && apt upgrade -y && apt install -y --no-install-recommends libss
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/hjblog hjblog
 COPY configuration configuration
+COPY static static
 ENV APP_ENVIRONMENT=local
 ENTRYPOINT ["./hjblog"]

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" charset="utf-8">
+    {% match title %}
+        {% when Some with (t) %}
+            <title>HJBlog - {{ t }}</title>
+        {% when None %}
+            <title>HJBlog</title>
+    {% endmatch %}
+</head>
+
+<body>
+    {#
+    {% for message in get_flashed_messages(with_categories=True) %}
+    <div id='alerts' onclick="alertDisplay()" style="text-align: center;">
+        <div class="{{ message[0] }} alert-generic">
+            {{ message[1] }}<br></br>
+        </div>
+        <br></br>
+    </div>
+    {% endfor %}
+    <div id="bottone" style="text-align: center; visibility: hidden;">
+        <button id="alert_button" onclick="alertButton()">Show Messages</button>
+    </div>
+    #}
+
+    <nav class="nav_bar">
+        <div class="nav_bar_left_items">
+            {#
+            <div class="link_container">
+                <a class="link" href="{{ url_for('index') }}">Home</a>
+            </div>
+            <div class="link_container">
+                <a class="link" href="{{ url_for('index.blog') }}">Blog</a>
+            </div>
+            <div class="link_container">
+                <a class="donate_link link" href="#">Donate</a>
+            </div>
+            #}
+        </div>
+
+        <div class="nav_bar_right_items">
+            {#
+            {% if current_user %}
+                <div class="link_container">
+                    <a href="{{ url_for('profile.manage_profile') }}" class="link">{{ current_user['username'] }}</a>
+                </div>
+                <div class="link_container">
+                    <a href="{{ url_for('auth.logout') }}" class="link">Log Out</a>
+                </div>
+                <div class="link_container">
+                    <a href="{{ url_for('user.weather') }}" class="link">Weather</a>
+                </div>
+                {% if current_user.is_admin %}
+                    <div class="link_container">
+                        <a href="{{ url_for('user.new_post') }}" class="link">Post</a>
+                    </div>
+                {% endif %}
+                {% if profile_pic %}
+                    <div class="img-container">
+                        <img src="{{ profile_pic }}" alt="profile picture" />
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="link_container">
+                    <a href="{{ url_for('auth.register') }}" class="link">Register</a>
+                </div>
+                <div class="link_container">
+                    <a href="{{ url_for('auth.login') }}" class="link">Log In</a>
+                </div>
+            {% endif %}
+            #}
+        </div>
+    </nav>
+
+    <div class="body">
+        {% block body %}{% endblock body %}
+    </div>
+
+
+
+    <div class="footer_wrapper">
+        <footer class="footer_main">
+            {#<a class="anchor_footer" href="{{ url_for('index') }}">Home</a>#}
+            <a class="anchor_footer" href="#">About</a>
+            <a class="anchor_footer" href="#">Donate</a>
+            <a class="anchor_footer" href="#">TODO</a>
+            <a class="anchor_footer" href="#">TODO</a>
+            <a class="anchor_footer" href="#">TODO</a>
+        </footer>
+    </div>
+
+
+    <script src="/static/scripts/script.js"></script>
+</body>
+
+</html>

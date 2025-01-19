@@ -35,10 +35,7 @@ cargo install sqlx-cli --no-default-features --features rustls,postgres
 sudo apt install postgresql-client-16
 ```
 
-
-
 ### Optional Dependencies
-
 
 - [Cargo Audit](https://crates.io/crates/cargo-audit): Tool for auditing dependencies for crates with security vulnerabilities reported to the [RustSec Advisory Database](https://github.com/RustSec/advisory-db/).
 
