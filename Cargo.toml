@@ -6,6 +6,7 @@ authors = ["hjrgrn <187955624+hjrgrn@users.noreply.github.com>"]
 description = "A blog website written for practing Rust and Actix-web"
 readme = "README.md"
 repository = "https://github.com/hjrgrn/hjblog-rs"
+default-run = "hjblog"
 
 [lib]
 path = "./src/lib.rs"
@@ -32,6 +33,9 @@ secrecy = { version = "0.10.3", features = ["serde"] }
 rand = { version = "0.8.5", features = ["std_rng"] }
 askama = { version = "0.12.1", features = ["with-actix-web"] }
 askama_actix = "0.14.0"
+validator = "0.20.0"
+argon2 = { version = "0.5.3", features = ["std"]}
+crossterm = "0.28.1"
 
 [dependencies.sqlx]
 version = "0.8.3"
