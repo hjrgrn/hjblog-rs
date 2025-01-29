@@ -94,6 +94,11 @@ Run using Docker:
 ./scripts/run_container.sh
 ```
 
+List server side commands:
+```bash
+cargo run --bin ls
+```
+
 *NOTE*: The scripts are meant to be run inside the root directory of the project.
 
 *NOTE*: The default configuration using Docker is [Local.toml](/configuration/Local.toml), which binds the server

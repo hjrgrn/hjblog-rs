@@ -21,8 +21,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let subscriber = get_subscriber("hjblog: new_admin".into(), "info".into(), io::stdout);
     init_subscriber(subscriber);
     let mut connection = PgConnection::connect_with(&config.database.with_db())
-        .await
-        .expect("Failed to establish a connection to postgres.");
+        .await?;
 
     let mut stdin = io::stdin().lock();
 
