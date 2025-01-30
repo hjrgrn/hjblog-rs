@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Init Postgres database for local and test environment
+
 set -x
 set -eo pipefail
 
@@ -22,6 +24,8 @@ DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 DB_NAME="${POSTGRES_DB:=hjblog_pg}"
 DB_PORT="${POSTGRES_PORT:=5432}"
 DB_HOST="${POSTGRES_HOST:=localhost}"
+NETWORK_BRIDGE="${HJBLOG_BRIDGE:=hjblog_bridge}"
+DB_INSTANCE="${HJBLOG_POSTGRES_INSTANCE:=hjblog_postgres_instance}"
 
 # Allow to skip Docker if a dockerized Postgres database is already running
 if [[ -z "${SKIP_DOCKER}" ]]; then
@@ -29,6 +33,8 @@ if [[ -z "${SKIP_DOCKER}" ]]; then
         -e POSTGRES_USER=${DB_USER} \
         -e POSTGRES_PASSWORD=${DB_PASSWORD} \
         -e POSTGRES_DB=${DB_NAME} \
+        --name ${DB_INSTANCE} \
+        --network ${NETWORK_BRIDGE} \
         -p "${DB_PORT}":5432 \
         -d postgres \
         postgres -N 1000

@@ -15,6 +15,7 @@ pub struct TestApp {
     pub port: u16,
     #[allow(dead_code)]
     pub db_pool: PgPool,
+    pub api_client: reqwest::Client,
     /// `cancellation_token` is needed for cleanup.
     /// `TestApp.token.cancel()` needs to be called at
     /// the end of the test function.
@@ -22,6 +23,8 @@ pub struct TestApp {
     pub token: CancellationToken,
     /// `handle` is needed for cleanup, `TestApp.handle.await`
     /// needs to be called after having called `TestApp.cancellation_token.cancel`.
+    /// If a test fails the temporary database created for that specific test
+    /// won't be cancelled and will be avaible for inspection.
     pub handle: JoinHandle<()>,
 }
 
@@ -83,9 +86,15 @@ pub async fn spawn_app() -> TestApp {
     let address = config.application.host.clone();
     let token = CancellationToken::new();
     let handle = tokio::spawn(switch(listener, token.clone(), config));
+    let api_client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .cookie_store(true)
+        .build()
+        .unwrap();
     TestApp {
         address,
         port,
+        api_client,
         db_pool,
         token,
         handle,

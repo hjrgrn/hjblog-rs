@@ -4,17 +4,19 @@ use crate::auxiliaries::spawn_app;
 async fn responds_with_404_when_requiring_an_unexisting_page() {
     let test_app = spawn_app().await;
 
-    let client = reqwest::Client::new();
-
     // Act
-    let response = client
+    let response = test_app
+        .api_client
         .get(&format!("{}/non-existing-page", &test_app.get_full_url()))
         .send()
         .await
         .expect("Failed to execute request.");
 
     let status = response.status().as_u16();
-    let body = response.text().await.expect("Failed to extract the body of the response.");
+    let body = response
+        .text()
+        .await
+        .expect("Failed to extract the body of the response.");
 
     assert_eq!(status, 404);
     assert!(body.contains("<h1>404: Resource not found.</h1>"));

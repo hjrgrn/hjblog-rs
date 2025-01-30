@@ -2,7 +2,7 @@
 host = "0.0.0.0"
 
 [database]
-host = "127.0.0.1"
+host = "hjblog_postgres_instance"
 port = 5432
 username = "postgres"
 password = "password"

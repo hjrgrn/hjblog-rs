@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="presentation">
+    <h1 class="presentation_h1">HJ's Blog</h1>
+    <p class="presentation_par">Welcome to HJ's Blog.</p>
+</div>
+
+<div class="posts_compact">
+    <h2 class="posts_compact_h2">Latest Posts</h2>
+    {% match posts %}
+        {% when Some with (p) %}
+            {% for i in 0..p.len() %}
+                <div class="posts_compact_container">
+                    <span class="posts_compact_index">{{ i }}</span>
+                    <!-- TODO: visit_post -->
+                    {#<a class="posts_compact_link" href="{{ url_for('user.visit_post', index=posts[i].id) }}">{{ posts[i].title
+                        }}</a>#}
+                    <span class="posts_compact_date">{{ p[i].posted.format("%d-%m-%Y %H:%M") }}</span>
+                    <span class="posts_compact_author">{{ p[i].username }}</span>
+                </div>
+            {% endfor %}
+            <div class="posts_compact_container">
+                <!-- TODO: index.blog -->
+                {#<a class="posts_compact_all_posts" href="{{ url_for('index.blog') }}">All posts →</a>#}
+                <a class="posts_compact_all_posts" href="#">All posts →</a>
+            </div>
+        {% when None %}
+            <span class="posts_compact_error">Currently there are no posts to be displayed, please try again later.</span>
+    {% endmatch %}
+</div>
+{% endblock body %}
