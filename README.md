@@ -29,7 +29,7 @@ sudo apt install libssl-dev
 cargo install sqlx-cli --no-default-features --features rustls,postgres
 ```
 
-- PostgresSQL Client, the latest version avaible in your distribution repo:
+- PostgresSQL Client, the latest version available in your distribution repo:
 
 ```bash
 sudo apt install postgresql-client-16
@@ -58,50 +58,46 @@ cargo run | bunyan
 ```
 
 
-## Install and Run
-
-Project setup:
+## Setup And Run
 
 ```bash
 git clone 'https://github.com/hjrgrn/hjblog-rs'
 cd hjblog-rs
 chmod +x ./scripts/*
-./scripts/init_db.sh
 ```
 
-*NOTE*: if you have already initialized the database skip `./scripts/init_db.sh` and instead run:
+### Without Docker
 
 ```bash
-docker container start <name_of_the_container>
+./scripts/init_db.sh
+cargo run
 ```
 
-Test:
+### Using Docker
+
+```bash
+./scripts/global_init.sh
+```
+
+### Config
+
+You can define your own configuration using the exemplar files in [configuration](/configuration/), the values inside the `configuration` files can also be changed using environment variables that have this pattern: `APP_<CONFIG__VALUE>`; for example, to change the port that the application use: `APP_APPLICATION__PORT=8080`. Other values outside `configuration` can be defined, take a look at [init_db script](/scripts/init_db.sh), which is the script for setting up a development database using Docker.
+
+### Cli Tools
+
+Server side CLI tools are available, to list them:
+
+```bash
+cargo run --bin ls
+```
+
+### Tests
 
 ```bash
 cargo test
 ```
 
-Run:
-
-```bash
-cargo run
-```
-
-Run using Docker:
-
-```bash
-./scripts/build_image.sh
-./scripts/run_container.sh
-```
-
-List server side commands:
-```bash
-cargo run --bin ls
-```
 
 *NOTE*: The scripts are meant to be run inside the root directory of the project.
 
-*NOTE*: The default configuration using Docker is [Local.toml](/configuration/Local.toml), which binds the server
-using the address `0.0.0.0`, if you manage your firewall with Ufw or Firewalld the `5000` port of your machine will be exposed
-to your local network becouse Docker bypasses your firewall rules;
-read [this](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw) for more informations.
+*NOTE*: The default configuration while running the application using Docker is [Local.toml](/configuration/Local.toml), this configuration assumes that application and Postgres instance are running on the same machine, the scripts generates a custom network bridge named `hjblog_bridge` that will allow dns functionality between Postgres and application; also, in this configuration the server is using the address `0.0.0.0`, if you manage your firewall with Ufw or Firewalld the `5000` port of your machine will be exposed to your local network becouse Docker bypasses your firewall rules; read [this](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw) for more informations.
