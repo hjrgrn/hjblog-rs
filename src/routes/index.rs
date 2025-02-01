@@ -4,7 +4,7 @@ use chrono::{DateTime, Local};
 use serde::Deserialize;
 use sqlx::{query_as, PgPool};
 
-use super::errors::error_500;
+use super::errors::e500;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -33,7 +33,7 @@ pub async fn index(pool: web::Data<PgPool>) -> Result<IndexTemplate, InternalErr
             }
         }
         Err(e) => {
-            return Err(InternalError::from_response(e, error_500().await));
+            return Err(e500(e).await);
         }
     };
     Ok(IndexTemplate {

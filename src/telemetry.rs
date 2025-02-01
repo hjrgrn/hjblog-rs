@@ -1,3 +1,4 @@
+use tokio::task::JoinHandle;
 use tracing::{subscriber::set_global_default, Subscriber};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_log::LogTracer;
@@ -40,4 +41,20 @@ where
 pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
     LogTracer::init().expect("Failed to set logger");
     set_global_default(subscriber).expect("Failed to set subscriber.");
+}
+
+/// # spawn_blocking_with_tracing
+///
+/// Spawn a blocking thread, necessary when dealing with a CPU intensive task.
+/// NOTE: Spawning a non blocking thread in a span doesn't allow me to track informations involving
+/// this span across threads, this means I will need to attach the span of the task that
+/// is calling `spawn_blocking` to the new spawned task.
+pub fn spawn_blocking_with_tracing<F, R>(f: F) -> JoinHandle<R>
+where
+    F: FnOnce() -> R + Send + 'static,
+    R: Send + 'static,
+{
+    let current_span = tracing::Span::current();
+    // we pass the ownership of `current_span` to the closure
+    tokio::task::spawn_blocking(move || current_span.in_scope(f))
 }

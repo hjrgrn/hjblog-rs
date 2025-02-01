@@ -2,7 +2,7 @@
 use crate::auxiliaries::spawn_app;
 
 #[tokio::test]
-async fn testing_idenx_template() {
+async fn testing_index_template() {
     let test_app = spawn_app().await;
 
     // Act
@@ -20,7 +20,6 @@ async fn testing_idenx_template() {
         .expect("Failed to extract the body of the response.");
 
     assert_eq!(status, 200);
-    println!("\n\n{}\n\n", body);
     assert!(body.contains(r#"<h1 class="presentation_h1">HJ's Blog</h1>"#));
     assert!(body.contains(r#"<h2 class="posts_compact_h2">Latest Posts</h2>"#));
     assert!(body.contains(r#"<p class="presentation_par">Welcome to HJ's Blog.</p>"#));
