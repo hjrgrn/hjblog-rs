@@ -1,0 +1,32 @@
+{% extends "base_layout.html" %}
+
+{% block base_body %}
+<header class="auth_header">
+    <h1>Sign in</h1>
+</header>
+<div class="upload_form">
+    <form action="/auth/login" method="post" accept-charset="utf-8">
+        <fieldset class="upload_form_fieldset">
+            <label>
+                <p class="upload_form_par">Username</p>
+                <input class="upload_form_input" type="text" placeholder="Username" name="username" id="username"
+                    autofocus />
+            </label>
+            <label>
+                <p class="upload_form_par">Password</p>
+                <input class="upload_form_input" type="password" placeholder="Password" name="password" id="password"
+                    autofocus />
+            </label>
+            <label>
+                <input class="bottone_auth" type="submit"/>
+            </label>
+        </fieldset>
+    </form>
+</div>
+<br></br>
+<div class="upload_form">
+    <!-- TODO: register -->
+    {#<p class="upload_form_par">You don't have an account? <a href="{{ url_for('auth.register') }}"
+            class="auth_link">Register</a></p>#}
+</div>
+{% endblock base_body %}

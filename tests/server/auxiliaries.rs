@@ -1,3 +1,4 @@
+use argon2::{password_hash::SaltString, Argon2, Params, PasswordHasher};
 use hj_blog_rs::{
     settings::{get_config, DatabaseSettings, Settings},
     startup::run,
@@ -5,10 +6,11 @@ use hj_blog_rs::{
 };
 use once_cell::sync::Lazy;
 use rand::{distributions::Alphanumeric, Rng};
-use sqlx::{Connection, Executor, PgConnection, PgPool};
+use sqlx::{query, Connection, Executor, PgConnection, PgPool};
 use std::{char, net::TcpListener};
 use tokio::{select, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
+use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
@@ -16,6 +18,7 @@ pub struct TestApp {
     #[allow(dead_code)]
     pub db_pool: PgPool,
     pub api_client: reqwest::Client,
+    pub test_admin: TestUser,
     /// `cancellation_token` is needed for cleanup.
     /// `TestApp.token.cancel()` needs to be called at
     /// the end of the test function.
@@ -31,6 +34,70 @@ pub struct TestApp {
 impl TestApp {
     pub fn get_full_url(&self) -> String {
         format!("http://{}:{}", self.address, self.port)
+    }
+
+    pub async fn post_login<Body: serde::Serialize>(&self, body: &Body) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/auth/login", &self.get_full_url()))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute the request")
+    }
+
+    pub async fn get_request(&self, path: &str) -> Result<reqwest::Response, reqwest::Error> {
+        self.api_client
+            .get(&format!("{}{}", &self.get_full_url(), path))
+            .send()
+            .await
+    }
+}
+
+#[allow(dead_code)]
+pub struct TestUser {
+    pub user_id: Uuid,
+    pub username: String,
+    pub password: String,
+    pub email: String,
+}
+
+impl TestUser {
+    pub async fn generate_admin(pool: &PgPool) -> Self {
+        let email = String::from("admin@admin.com");
+        let user_id = Uuid::new_v4();
+        let username = Uuid::new_v4().to_string();
+        let password = Uuid::new_v4().to_string();
+
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        // Match parameters of the default password
+        let hash_pass = Argon2::new(
+            argon2::Algorithm::Argon2id,
+            argon2::Version::V0x13,
+            Params::new(15000, 2, 1, None).unwrap(),
+        )
+        .hash_password(password.as_bytes(), &salt)
+        .unwrap()
+        .to_string();
+
+        // FIX: code duplication in ./src/bin/new-admin.rs
+        query(
+            "INSERT INTO users (id, username, email, hash_pass, is_admin) VALUES ($1, $2, $3, $4, $5)",
+        )
+        .bind(Uuid::new_v4())
+        .bind(&username)
+        .bind(&email)
+        .bind(&hash_pass)
+        .bind(true)
+        .execute(pool)
+        .await
+        .expect("Failed to create a new user.");
+
+        Self {
+            user_id,
+            username,
+            password,
+            email,
+        }
     }
 }
 
@@ -91,11 +158,15 @@ pub async fn spawn_app() -> TestApp {
         .cookie_store(true)
         .build()
         .unwrap();
+
+    let test_admin = TestUser::generate_admin(&db_pool).await;
+
     TestApp {
         address,
         port,
-        api_client,
         db_pool,
+        api_client,
+        test_admin,
         token,
         handle,
     }
@@ -161,6 +232,15 @@ async fn switch(listener: TcpListener, token: CancellationToken, config: Setting
                 );
             connection_to_postgres.close().await.expect("Failed to close connection to Postgres instance.");
         }
-        _ = run(listener, connection_to_db.clone()).expect("Failed to spawn test instance.") => {}
+        _ = run(
+            listener,
+            connection_to_db.clone(),
+            config.application.hmac_secret
+        ).expect("Failed to spawn test instance.") => {}
     }
+}
+
+pub fn assert_is_redirect_to(response: &reqwest::Response, location: &str) {
+    assert_eq!(response.status().as_u16(), 303);
+    assert_eq!(response.headers().get("location").unwrap(), location);
 }

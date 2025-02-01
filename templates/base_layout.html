@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" charset="utf-8">
+        {% match title %}
+            {% when Some with (t) %}
+                <title>HJBlog - {{ t }}</title>
+            {% when None %}
+                <title>HJBlog</title>
+        {% endmatch %}
+    </head>
+    <body>
+        <!-- TODO: flash messages -->
+        {#
+        {% for message in get_flashed_messages(with_categories=True) %}
+            <div id='alerts' onclick="alertDisplay()" style="text-align: center;">
+                <div class="{{ message[0] }} alert-generic">
+                    {{ message[1] }}<br></br>
+                </div>
+                <br></br>
+            </div>
+		{% endfor %}
+		<div id="bottone" style="text-align: center; visibility: hidden;">
+			<button id="alert_button" onclick="alertButton()">Show Messages</button>
+		</div>
+        #}
+
+        {% block base_body %}{% endblock base_body %}
+
+        <script src="/static/scripts/script.js"></script>
+    </body>
+</html>

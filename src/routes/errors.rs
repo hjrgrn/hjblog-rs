@@ -65,3 +65,11 @@ fn generate_error_template(
     };
     ctx.render()
 }
+
+/// TODO: comment
+pub async fn e500<T>(e: T) -> actix_web::error::InternalError<T>
+where
+    T: std::fmt::Debug + std::fmt::Display + 'static,
+{
+    actix_web::error::InternalError::from_response(e, error_500().await)
+}
