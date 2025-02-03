@@ -49,7 +49,7 @@ pub async fn error_500() -> HttpResponse {
 }
 
 /// TODO: comment
-#[tracing::instrument(name = "Generate error", skip(h1, p))]
+#[tracing::instrument(name = "Generate error template", skip(h1, p))]
 fn generate_error_template(
     h1: &str,
     p: &str,

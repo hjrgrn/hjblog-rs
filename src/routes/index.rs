@@ -4,12 +4,15 @@ use chrono::{DateTime, Local};
 use serde::Deserialize;
 use sqlx::{query_as, PgPool};
 
-use super::errors::e500;
+use crate::session_state::TypedSession;
+
+use super::{errors::e500, CurrentUser};
 
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct IndexTemplate {
     pub title: Option<String>,
+    pub current_user: Option<CurrentUser>,
     pub posts: Option<Vec<Post>>,
 }
 
@@ -23,7 +26,17 @@ pub struct Post {
 }
 
 /// TODO: comment
-pub async fn index(pool: web::Data<PgPool>) -> Result<IndexTemplate, InternalError<sqlx::Error>> {
+pub async fn index(
+    pool: web::Data<PgPool>,
+    session: TypedSession,
+) -> Result<IndexTemplate, InternalError<anyhow::Error>> {
+    let current_user = match session.get_current_user(&pool).await {
+        Ok(cu) => cu,
+        Err(e) => {
+            return Err(e500(e.into()).await);
+        }
+    };
+
     let posts = match get_posts(&pool).await {
         Ok(p) => {
             if p.len() == 0 {
@@ -33,11 +46,12 @@ pub async fn index(pool: web::Data<PgPool>) -> Result<IndexTemplate, InternalErr
             }
         }
         Err(e) => {
-            return Err(e500(e).await);
+            return Err(e500(e.into()).await);
         }
     };
     Ok(IndexTemplate {
         title: Some(String::from("Home")),
+        current_user,
         posts,
     })
 }

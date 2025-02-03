@@ -235,7 +235,8 @@ async fn switch(listener: TcpListener, token: CancellationToken, config: Setting
         _ = run(
             listener,
             connection_to_db.clone(),
-            config.application.hmac_secret
+            config.application.hmac_secret,
+            config.application.cookie_secure,
         ).expect("Failed to spawn test instance.") => {}
     }
 }

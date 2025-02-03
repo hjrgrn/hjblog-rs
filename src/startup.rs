@@ -12,6 +12,7 @@ pub fn run(
     listener: TcpListener,
     connection_pool: Pool<Postgres>,
     hmac_secret: SecretString,
+    cookie_secure: bool,
 ) -> Result<Server, io::Error> {
     let pool = web::Data::new(connection_pool);
     let secret_key = Key::from(hmac_secret.expose_secret().as_bytes());
@@ -21,6 +22,7 @@ pub fn run(
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_content_security(CookieContentSecurity::Private)
+                    .cookie_secure(cookie_secure)
                     .build(),
             )
             .route("/health_check", web::get().to(health_check))

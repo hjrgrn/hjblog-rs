@@ -81,7 +81,7 @@ cargo run
 
 ### Config
 
-You can define your own configuration using the exemplar files in [configuration](/configuration/), the values inside the `configuration` files can also be changed using environment variables that have this pattern: `APP_<CONFIG__VALUE>`; for example, to change the port that the application use: `APP_APPLICATION__PORT=8080`. Other values outside `configuration` can be defined, take a look at [init_db script](/scripts/init_db.sh), which is the script for setting up a development database using Docker.
+You can define your own configuration using the exemplar files in [configuration](/configuration/), the values inside the `configuration` files can also be changed using environment variables that have this pattern: `APP_<CONFIG__VALUE>`; for example, to change the port that the application use: `APP_APPLICATION__PORT=8080`. Other values outside `configuration` can be defined, take a look at [init_db](/scripts/init_db.sh) script, which is the script for setting up a development database using Docker.
 
 ### Cli Tools
 
