@@ -1,5 +1,6 @@
 [application]
 host = "0.0.0.0"
+cookie_secure = true
 
 [database]
 host = "127.0.0.1"

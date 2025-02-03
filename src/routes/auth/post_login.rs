@@ -1,4 +1,3 @@
-use actix_session::Session;
 use actix_web::{
     error::InternalError,
     http::header::LOCATION,
@@ -8,9 +7,8 @@ use actix_web::{
 use secrecy::SecretString;
 use serde::Deserialize;
 use sqlx::PgPool;
-use uuid::Uuid;
 
-use crate::routes::errors::e500;
+use crate::{routes::errors::e500, session_state::TypedSession};
 
 use super::auxiliaries::{validate_credentials, AuthError, Credentials};
 
@@ -20,7 +18,7 @@ pub struct LoginFormData {
     password: SecretString,
 }
 
-// TODO: comment, refactor, flash
+// TODO: comment, refactor, flash, tracing
 #[tracing::instrument(
     skip(form, pool, session),
     fields(
@@ -29,13 +27,13 @@ pub struct LoginFormData {
     )
 )]
 pub async fn login_form(
-    session: Session,
+    session: TypedSession,
     form: Form<LoginFormData>,
     pool: Data<PgPool>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
 
     // FIX: code duplication in super::get_login::login
-    let user_id = match session.get::<Uuid>("user_id") {
+    let user_id = match session.get_user_id() {
         Ok(id) => id,
         Err(e) => {
             return Err(e500(e.into()).await);
@@ -61,7 +59,7 @@ pub async fn login_form(
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
             session.renew();
-            match session.insert("user_id", user_id) {
+            match session.insert_user_id(user_id) {
                 Ok(_) => {}
                 Err(e) => return Err(e500(e.into()).await),
             }

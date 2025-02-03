@@ -2,11 +2,6 @@
 use crate::auxiliaries::{assert_is_redirect_to, spawn_app};
 
 #[tokio::test]
-async fn testing_login_template() {
-    // TODO: waiting for navbar
-}
-
-#[tokio::test]
 async fn redirect_to_index_if_login_success() {
     // Arrange
     let app = spawn_app().await;

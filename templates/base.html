@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" charset="utf-8">
     {% match title %}
-        {% when Some with (t) %}
-            <title>HJBlog - {{ t }}</title>
-        {% when None %}
-            <title>HJBlog</title>
+    {% when Some with (t) %}
+    <title>HJBlog - {{ t }}</title>
+    {% when None %}
+    <title>HJBlog</title>
     {% endmatch %}
 </head>
 
@@ -30,50 +30,56 @@
 
     <nav class="nav_bar">
         <div class="nav_bar_left_items">
-            {#
             <div class="link_container">
-                <a class="link" href="{{ url_for('index') }}">Home</a>
+                <a class="link" href="/">Home</a>
             </div>
             <div class="link_container">
-                <a class="link" href="{{ url_for('index.blog') }}">Blog</a>
+                <!-- TODO: blog -->
+                <a class="link" href="#">Blog</a>
             </div>
             <div class="link_container">
                 <a class="donate_link link" href="#">Donate</a>
             </div>
-            #}
         </div>
 
         <div class="nav_bar_right_items">
-            {#
-            {% if current_user %}
-                <div class="link_container">
-                    <a href="{{ url_for('profile.manage_profile') }}" class="link">{{ current_user['username'] }}</a>
-                </div>
-                <div class="link_container">
-                    <a href="{{ url_for('auth.logout') }}" class="link">Log Out</a>
-                </div>
-                <div class="link_container">
-                    <a href="{{ url_for('user.weather') }}" class="link">Weather</a>
-                </div>
-                {% if current_user.is_admin %}
+            {% match current_user %}
+                {% when Some with (cu) %}
                     <div class="link_container">
-                        <a href="{{ url_for('user.new_post') }}" class="link">Post</a>
+                        <!-- TODO: manage profile -->
+                        <a href="#" class="link">{{ cu.username }}</a>
                     </div>
-                {% endif %}
-                {% if profile_pic %}
-                    <div class="img-container">
-                        <img src="{{ profile_pic }}" alt="profile picture" />
+                    <div class="link_container">
+                        <!-- TODO: logout -->
+                        <a href="#" class="link">Log Out</a>
                     </div>
-                {% endif %}
-            {% else %}
-                <div class="link_container">
-                    <a href="{{ url_for('auth.register') }}" class="link">Register</a>
-                </div>
-                <div class="link_container">
-                    <a href="{{ url_for('auth.login') }}" class="link">Log In</a>
-                </div>
-            {% endif %}
-            #}
+                    <div class="link_container">
+                        <!-- TODO: weather -->
+                        <a href="#" class="link">Weather</a>
+                    </div>
+                    {% if cu.is_admin %}
+                        <div class="link_container">
+                            <!-- TODO: post -->
+                            <a href="#" class="link">Post</a>
+                        </div>
+                    {% endif %}
+                    {% match cu.profile_pic %}
+                        {% when Some with (path) %}
+                            <div class="img-container">
+                                <!-- TODO: profile pic -->
+                                <!-- <img src="#" alt="profile picture" /> -->
+                            </div>
+                        {% when None %}
+                    {% endmatch %}
+                {% when None %}
+                    <div class="link_container">
+                        <!-- TODO: Register -->
+                        <a href="#" class="link">Register</a>
+                    </div>
+                    <div class="link_container">
+                        <a href="/auth/login" class="link">Log In</a>
+                    </div>
+            {% endmatch %}
         </div>
     </nav>
 

@@ -1,9 +1,7 @@
-use actix_session::Session;
 use actix_web::{http::header::LOCATION, HttpResponse, Responder};
 use askama_actix::Template;
-use uuid::Uuid;
 
-use crate::routes::errors::e500;
+use crate::{routes::errors::e500, session_state::TypedSession};
 
 #[derive(Template)]
 #[template(path = "login.html")]
@@ -13,9 +11,9 @@ pub struct LoginTemplate {
 
 /// TODO: comment, flash messages, refactor, telemetry
 pub async fn login(
-    session: Session,
+    session: TypedSession,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {
-    let user_id = match session.get::<Uuid>("user_id") {
+    let user_id = match session.get_user_id() {
         Ok(id) => id,
         Err(e) => {
             return Err(e500(e.into()).await);
