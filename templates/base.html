@@ -6,27 +6,29 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" charset="utf-8">
     {% match title %}
-    {% when Some with (t) %}
-    <title>HJBlog - {{ t }}</title>
-    {% when None %}
-    <title>HJBlog</title>
+        {% when Some with (t) %}
+            <title>HJBlog - {{ t }}</title>
+        {% when None %}
+            <title>HJBlog</title>
     {% endmatch %}
 </head>
 
 <body>
-    {#
-    {% for message in get_flashed_messages(with_categories=True) %}
-    <div id='alerts' onclick="alertDisplay()" style="text-align: center;">
-        <div class="{{ message[0] }} alert-generic">
-            {{ message[1] }}<br></br>
-        </div>
-        <br></br>
-    </div>
-    {% endfor %}
+    {% match flash_messages %}
+        {% when Some with(fm) %}
+            {% for m in fm.iter() %}
+                <div id='alerts' onclick="alertDisplay()" style="text-align: center;">
+                    <div class="{{ m.level }} alert-generic">
+                        {{ m.content }}<br></br>
+                    </div>
+                    <br></br>
+                </div>
+            {% endfor %}
+        {% when None %}
+    {% endmatch %}
     <div id="bottone" style="text-align: center; visibility: hidden;">
         <button id="alert_button" onclick="alertButton()">Show Messages</button>
     </div>
-    #}
 
     <nav class="nav_bar">
         <div class="nav_bar_left_items">

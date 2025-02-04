@@ -1,4 +1,3 @@
-//! TODO: test flash messages
 use crate::auxiliaries::{assert_is_redirect_to, spawn_app};
 
 #[tokio::test]
@@ -25,6 +24,14 @@ async fn redirect_to_login_if_login_unsuccessfull() {
     });
     let response = app.post_login(&login_body).await;
     assert_is_redirect_to(&response, "/auth/login");
+    let response = app
+        .get_request("/")
+        .await
+        .expect("Failed to request \"/\".");
+    let body = response.text().await.unwrap();
+
+    assert!(body.contains("Invalid credentials, try again."));
+    assert!(body.contains(r#"<div class="alert-danger alert-generic">"#));
 }
 
 #[tokio::test]
@@ -43,4 +50,13 @@ async fn redirect_to_index_if_already_logged_in() {
         .expect("Failed to query the server.");
 
     assert_is_redirect_to(&response, "/");
+
+    let response = app
+        .get_request("/")
+        .await
+        .expect("Failed to request \"/\".");
+    let body = response.text().await.unwrap();
+
+    assert!(body.contains("You are already logged in, before logging in again logout."));
+    assert!(body.contains(r#"<div class="alert-danger alert-generic">"#));
 }

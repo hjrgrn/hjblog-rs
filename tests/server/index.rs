@@ -1,4 +1,4 @@
-//! TODO: waiting for post, picture, flash messages and register
+//! TODO: waiting for post, picture and register
 use crate::auxiliaries::spawn_app;
 
 #[tokio::test]
@@ -58,6 +58,8 @@ async fn testing_navbar_when_logged_as_admin() {
     )));
     assert!(body.contains(r#"class="link">Log Out</a>"#));
     assert!(body.contains(r#"class="link">Post</a>"#));
+    assert!(body.contains(r#"<div class="alert-success alert-generic">"#));
+    assert!(body.contains(&format!("Welcome back {}!", &test_app.test_admin.username)));
 }
 
 #[tokio::test]

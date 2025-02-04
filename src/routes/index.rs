@@ -1,4 +1,5 @@
 use actix_web::{error::InternalError, web};
+use actix_web_flash_messages::IncomingFlashMessages;
 use askama_actix::Template;
 use chrono::{DateTime, Local};
 use serde::Deserialize;
@@ -6,7 +7,11 @@ use sqlx::{query_as, PgPool};
 
 use crate::session_state::TypedSession;
 
-use super::{errors::e500, CurrentUser};
+use super::{
+    auxiliaries::{get_flash_messages, FormattedFlashMessage},
+    errors::e500,
+    CurrentUser,
+};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -14,6 +19,7 @@ pub struct IndexTemplate {
     pub title: Option<String>,
     pub current_user: Option<CurrentUser>,
     pub posts: Option<Vec<Post>>,
+    pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
 #[derive(Deserialize, sqlx::FromRow)]
@@ -29,7 +35,9 @@ pub struct Post {
 pub async fn index(
     pool: web::Data<PgPool>,
     session: TypedSession,
+    messages: IncomingFlashMessages,
 ) -> Result<IndexTemplate, InternalError<anyhow::Error>> {
+    let flash_messages = get_flash_messages(&messages);
     let current_user = match session.get_current_user(&pool).await {
         Ok(cu) => cu,
         Err(e) => {
@@ -53,6 +61,7 @@ pub async fn index(
         title: Some(String::from("Home")),
         current_user,
         posts,
+        flash_messages,
     })
 }
 

@@ -1,11 +1,14 @@
 use actix_web::HttpResponse;
 use askama_actix::Template;
 
+use super::auxiliaries::FormattedFlashMessage;
+
 #[derive(Template)]
 #[template(path = "error.html")]
 pub struct ErrorTemplate {
     pub title: Option<String>,
     pub input: ErrorInput,
+    pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
 pub struct ErrorInput {
@@ -62,6 +65,7 @@ fn generate_error_template(
     let ctx = ErrorTemplate {
         title: Some(h1.to_string()),
         input,
+        flash_messages: None,
     };
     ctx.render()
 }
