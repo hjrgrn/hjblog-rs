@@ -2,6 +2,7 @@ use actix_session::{
     config::CookieContentSecurity, storage::CookieSessionStore, SessionMiddleware,
 };
 use actix_web::{cookie::Key, dev::Server, web, App, HttpServer};
+use actix_web_flash_messages::{storage::SessionMessageStore, FlashMessagesFramework};
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::{Pool, Postgres};
 use std::{io, net::TcpListener};
@@ -16,13 +17,16 @@ pub fn run(
 ) -> Result<Server, io::Error> {
     let pool = web::Data::new(connection_pool);
     let secret_key = Key::from(hmac_secret.expose_secret().as_bytes());
+    let flash_farmework = FlashMessagesFramework::builder(SessionMessageStore::default()).build();
 
     Ok(HttpServer::new(move || {
         App::new()
+            .wrap(flash_farmework.clone())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_content_security(CookieContentSecurity::Private)
                     .cookie_secure(cookie_secure)
+                    .cookie_http_only(true)
                     .build(),
             )
             .route("/health_check", web::get().to(health_check))
