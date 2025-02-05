@@ -24,6 +24,10 @@ impl TypedSession {
         self.0.get(Self::USER_ID_KEY)
     }
 
+    pub fn delete_user_id(&self) -> Option<String> {
+        self.0.remove(Self::USER_ID_KEY)
+    }
+
     pub async fn get_current_user(
         &self,
         pool: &PgPool,
