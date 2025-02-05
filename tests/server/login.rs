@@ -2,7 +2,6 @@ use crate::auxiliaries::{assert_is_redirect_to, spawn_app};
 
 #[tokio::test]
 async fn redirect_to_index_if_login_success() {
-    // Arrange
     let app = spawn_app().await;
 
     let login_body = serde_json::json!({
@@ -15,7 +14,6 @@ async fn redirect_to_index_if_login_success() {
 
 #[tokio::test]
 async fn redirect_to_login_if_login_unsuccessfull() {
-    // Arrange
     let app = spawn_app().await;
 
     let login_body = serde_json::json!({
@@ -36,7 +34,6 @@ async fn redirect_to_login_if_login_unsuccessfull() {
 
 #[tokio::test]
 async fn redirect_to_index_if_already_logged_in() {
-    // Arrange
     let app = spawn_app().await;
 
     let login_body = serde_json::json!({
