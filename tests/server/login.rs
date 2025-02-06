@@ -1,4 +1,4 @@
-use crate::auxiliaries::{assert_is_redirect_to, spawn_app};
+use crate::auxiliaries::{assert_redirects_to, spawn_app};
 
 #[tokio::test]
 async fn redirect_to_index_if_login_success() {
@@ -9,7 +9,7 @@ async fn redirect_to_index_if_login_success() {
         "password": &app.test_admin.password
     });
     let response = app.post_login(&login_body).await;
-    assert_is_redirect_to(&response, "/");
+    assert_redirects_to(&response, "/");
 }
 
 #[tokio::test]
@@ -21,7 +21,7 @@ async fn redirect_to_login_if_login_unsuccessfull() {
         "password": "random-password"
     });
     let response = app.post_login(&login_body).await;
-    assert_is_redirect_to(&response, "/auth/login");
+    assert_redirects_to(&response, "/auth/login");
     let response = app
         .get_request("/")
         .await
@@ -46,7 +46,7 @@ async fn redirect_to_index_if_already_logged_in() {
         .await
         .expect("Failed to query the server.");
 
-    assert_is_redirect_to(&response, "/");
+    assert_redirects_to(&response, "/");
 
     let response = app
         .get_request("/")

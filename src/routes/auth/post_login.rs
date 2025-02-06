@@ -1,3 +1,4 @@
+//! TODO: option dataform
 use actix_web::{
     error::InternalError,
     http::header::LOCATION,
@@ -11,7 +12,7 @@ use sqlx::PgPool;
 
 use crate::{routes::errors::e500, session_state::TypedSession};
 
-use super::auxiliaries::{validate_credentials, AuthError, Credentials};
+use super::auxiliaries::{validate_login_credentials, AuthError, LoginCredentials};
 
 #[derive(Deserialize)]
 pub struct LoginFormData {
@@ -50,14 +51,14 @@ pub async fn login_form(
         None => {}
     }
 
-    let credentials = Credentials {
+    let credentials = LoginCredentials {
         username: form.0.username,
         password: form.0.password,
     };
 
     tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
 
-    match validate_credentials(credentials, &pool).await {
+    match validate_login_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
             session.renew();

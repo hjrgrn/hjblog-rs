@@ -1,4 +1,4 @@
-//! TODO: comment
+//! TODO: comment, domain
 use std::io::{self, BufRead, StdinLock, Write};
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};

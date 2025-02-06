@@ -1,4 +1,4 @@
-//! TODO: waiting for post, picture and register
+//! TODO: waiting for post, picture
 use crate::auxiliaries::spawn_app;
 
 #[tokio::test]
