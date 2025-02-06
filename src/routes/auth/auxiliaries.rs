@@ -1,16 +1,59 @@
 use anyhow::Context;
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use rand::rngs::OsRng;
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
 
+use crate::domain::ValidEmail;
+use crate::domain::ValidUserName;
 use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(Debug)]
-pub struct Credentials {
+pub struct LoginCredentials {
     pub username: String,
     pub password: SecretString,
+}
+
+#[derive(Debug)]
+pub struct RegisterCredentials {
+    username: ValidUserName,
+    email: ValidEmail,
+    password: SecretString,
+}
+
+impl RegisterCredentials {
+    pub fn parse(
+        username: &str,
+        email: &str,
+        password: &SecretString,
+        confirm_password: &SecretString,
+    ) -> Result<Self, anyhow::Error> {
+        if password.expose_secret() != confirm_password.expose_secret() {
+            return Err(anyhow::anyhow!(
+                "You typed two different passwords. Try again."
+            ));
+        }
+
+        let username = ValidUserName::parse(username)?;
+        let email = ValidEmail::parse(email)?;
+
+        Ok(Self {
+            username,
+            email,
+            password: password.clone(),
+        })
+    }
+
+    pub fn get_username(&self) -> &str {
+        self.username.as_ref()
+    }
+
+    pub fn get_email(&self) -> &str {
+        self.email.as_ref()
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -21,12 +64,22 @@ pub enum AuthError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum RegisterError {
+    #[error(transparent)]
+    InvalidCredentials(#[from] anyhow::Error),
+    #[error(transparent)]
+    Sqlx(#[from] sqlx::Error),
+    #[error(transparent)]
+    Argon2(#[from] argon2::password_hash::Error),
+}
+
 /// TODO: comment, refactor
 /// NOTE: this function prevent timing attack by performing the same amount of work even if it didn't receive
 /// a valid username, [OWASP](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account).
 #[tracing::instrument(name = "Validate credentials", skip(credentials, pool))]
-pub async fn validate_credentials(
-    credentials: Credentials,
+pub async fn validate_login_credentials(
+    credentials: LoginCredentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, AuthError> {
     let mut user_id = None;
@@ -101,4 +154,84 @@ pub fn verify_password_hash(
         )
         .context("Invalid password")
         .map_err(AuthError::InvalidCredentials)
+}
+
+/// TODO: comment, refactoring
+#[tracing::instrument(
+    name = "Registering a new user",
+    skip(pool, credentials),
+    fields(
+        username=tracing::field::Empty,
+        email=tracing::field::Empty,
+        user_id=tracing::field::Empty
+    )
+)]
+pub async fn register_user(
+    credentials: &RegisterCredentials,
+    pool: &PgPool,
+    admin: bool
+) -> Result<Uuid, RegisterError> {
+    let user_id = Uuid::new_v4();
+    let row = sqlx::query("SELECT id FROM users WHERE username = $1")
+        .bind(credentials.username.as_ref())
+        .fetch_optional(pool)
+        .await?;
+    match row {
+        Some(_) => return Err(anyhow::anyhow!("Your credentials are already taken.").into()),
+        None => {}
+    }
+
+    let row = sqlx::query("SELECT id FROM users WHERE email = $1")
+        .bind(credentials.email.as_ref())
+        .fetch_optional(pool)
+        .await?;
+    match row {
+        Some(_) => return Err(anyhow::anyhow!("Your credentials are already taken.").into()),
+        None => {}
+    }
+
+    let salt = SaltString::generate(OsRng);
+    let hash_pass = Argon2::default()
+        .hash_password(credentials.password.expose_secret().as_bytes(), &salt)?
+        .to_string();
+
+    sqlx::query(
+        r#"INSERT INTO users
+(
+    id,
+    username,
+    email,
+    hash_pass,
+    is_admin,
+    is_two_factor_authentication_enabled
+) VALUES ($1, $2, $3, $4, $5, $6)
+"#,
+    )
+    .bind(user_id)
+    .bind(credentials.username.as_ref())
+    .bind(credentials.email.as_ref())
+    .bind(hash_pass)
+    .bind(admin)
+    .bind(false)
+    .execute(pool)
+    .await?;
+
+    let row = sqlx::query("SELECT id FROM users WHERE (username = $1)")
+        .bind(credentials.username.as_ref())
+        .fetch_optional(pool)
+        .await?;
+    match row {
+        Some(r) => match r.try_get("id") {
+            Ok(id) => Ok(id),
+            Err(e) => {
+                return Err(anyhow::anyhow!("This error shouldn't have happened:\n{}", e).into());
+            }
+        },
+        None => {
+            return Err(anyhow::anyhow!(
+                "Failed to find the row I just inserted, this shouldn't have happened."
+            )
+            .into())
+        }
+    }
 }

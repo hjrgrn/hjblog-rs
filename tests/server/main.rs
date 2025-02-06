@@ -4,3 +4,4 @@ mod errors;
 mod index;
 mod login;
 mod logout;
+mod register;

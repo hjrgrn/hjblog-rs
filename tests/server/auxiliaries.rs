@@ -51,6 +51,15 @@ impl TestApp {
             .send()
             .await
     }
+
+    pub async fn post_register<Body: serde::Serialize>(&self, body: &Body) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/auth/register", &self.get_full_url()))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to request \"/auth\"/register")
+    }
 }
 
 #[allow(dead_code)]
@@ -241,7 +250,7 @@ async fn switch(listener: TcpListener, token: CancellationToken, config: Setting
     }
 }
 
-pub fn assert_is_redirect_to(response: &reqwest::Response, location: &str) {
+pub fn assert_redirects_to(response: &reqwest::Response, location: &str) {
     assert_eq!(response.status().as_u16(), 303);
     assert_eq!(response.headers().get("location").unwrap(), location);
 }

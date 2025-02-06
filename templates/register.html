@@ -1,0 +1,39 @@
+{% extends "base_layout.html" %}
+
+{% block base_body %}
+    <header class="auth_header">
+        <h1>Register</h1>
+    </header>
+    <div class="upload_form">
+        <form action="/auth/register" method="post" accept-charset="utf-8">
+            <fieldset class="upload_form_fieldset">
+                <label>
+                    <p class="upload_form_par">Username</p>
+                    <input class="upload_form_input" type="text" placeholder="Username" name="username" id="username"
+                        autofocus />
+                </label>
+                <label>
+                    <p class="upload_form_par">Email</p>
+                    <input class="upload_form_input" type="text" placeholder="Email" name="email" id="email" autofocus />
+                </label>
+                <label>
+                    <p class="upload_form_par">Password</p>
+                    <input class="upload_form_input" type="password" placeholder="Password" name="password" id="password"
+                        autofocus />
+                </label>
+                <label>
+                    <p class="upload_form_par">Confirm Password</p>
+                    <input class="upload_form_input" type="password" placeholder="Confirm Password" name="confirm_password"
+                        id="confirm_password" autofocus />
+                </label>
+                <label>
+                    <input class="bottone_auth" type="submit" />
+                </label>
+            </fieldset>
+        </form>
+    </div>
+    <br></br>
+    <div class="upload_form">
+        <p class="upload_form_par">Do you have an account already? <a href="/auth/login" class="auth_link">Sign In</a></p>
+    </div>
+{% endblock base_body %}

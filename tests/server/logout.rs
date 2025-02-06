@@ -1,4 +1,4 @@
-use crate::auxiliaries::{assert_is_redirect_to, spawn_app};
+use crate::auxiliaries::{assert_redirects_to, spawn_app};
 
 #[tokio::test]
 async fn redirects_you_to_login_if_not_logged_in() {
@@ -8,7 +8,7 @@ async fn redirects_you_to_login_if_not_logged_in() {
         .get_request("/auth/logout")
         .await
         .expect("Failed to request route \"/auth/logout\".");
-    assert_is_redirect_to(&response, "/auth/login");
+    assert_redirects_to(&response, "/auth/login");
 
     let response = test_app
         .get_request("/auth/login")
@@ -44,7 +44,7 @@ async fn redirects_you_to_index_if_logut_is_successfull() {
         .get_request("/auth/logout")
         .await
         .expect("Failed to request route \"/auth/logout\".");
-    assert_is_redirect_to(&response, "/");
+    assert_redirects_to(&response, "/");
 
     let response = test_app
         .get_request("/index")
