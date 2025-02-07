@@ -3,7 +3,9 @@ use actix_web_flash_messages::FlashMessage;
 
 use crate::{routes::errors::e500, session_state::TypedSession};
 
-/// TODO: comment, refactoring
+/// # `logout`
+///
+/// Response to get "/auth/logout"
 #[tracing::instrument(
     name = "Logging out user"
     skip(session),
@@ -30,17 +32,8 @@ pub async fn logout(
         }
     };
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-
-    match session.delete_user_id() {
-        Some(_) => {
-            FlashMessage::info("See you space cowboy").send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/"))
-                .finish());
-        }
-        None => {
-            // NOTE: this should not happen
-            return Err(e500(anyhow::anyhow!("Failed to remove \"user_id\" entry from TypedSession when user is logged in, this shouldn't have happende.")).await);
-        }
-    }
+    session.logout();
+    return Ok(HttpResponse::SeeOther()
+        .insert_header((LOCATION, "/"))
+        .finish());
 }

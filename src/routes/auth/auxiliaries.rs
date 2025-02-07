@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use anyhow::Context;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
@@ -7,8 +9,9 @@ use sqlx::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
 
-use crate::domain::ValidEmail;
+use crate::auxiliaries::error_chain_fmt;
 use crate::domain::ValidUserName;
+use crate::domain::{ValidEmail, ValidPassword};
 use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(Debug)]
@@ -21,7 +24,7 @@ pub struct LoginCredentials {
 pub struct RegisterCredentials {
     username: ValidUserName,
     email: ValidEmail,
-    password: SecretString,
+    password: ValidPassword,
 }
 
 impl RegisterCredentials {
@@ -39,11 +42,12 @@ impl RegisterCredentials {
 
         let username = ValidUserName::parse(username)?;
         let email = ValidEmail::parse(email)?;
+        let password = ValidPassword::parse(&password)?;
 
         Ok(Self {
             username,
             email,
-            password: password.clone(),
+            password,
         })
     }
 
@@ -56,7 +60,7 @@ impl RegisterCredentials {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error)]
 pub enum AuthError {
     #[error("Invalid credentials.")]
     InvalidCredentials(#[source] anyhow::Error),
@@ -64,7 +68,13 @@ pub enum AuthError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
-#[derive(thiserror::Error, Debug)]
+impl Debug for AuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
+    }
+}
+
+#[derive(thiserror::Error)]
 pub enum RegisterError {
     #[error(transparent)]
     InvalidCredentials(#[from] anyhow::Error),
@@ -74,7 +84,13 @@ pub enum RegisterError {
     Argon2(#[from] argon2::password_hash::Error),
 }
 
-/// TODO: comment, refactor
+impl Debug for RegisterError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
+    }
+}
+
+/// TODO: comment
 /// NOTE: this function prevent timing attack by performing the same amount of work even if it didn't receive
 /// a valid username, [OWASP](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account).
 #[tracing::instrument(name = "Validate credentials", skip(credentials, pool))]
@@ -103,7 +119,7 @@ pub async fn validate_login_credentials(
         .map_err(AuthError::InvalidCredentials)
 }
 
-/// TODO: comment, refactor
+/// TODO: comment
 pub async fn get_stored_credentials(
     username: &str,
     pool: &PgPool,
@@ -136,6 +152,7 @@ pub async fn get_stored_credentials(
     Ok(row)
 }
 
+/// TODO: comment
 #[tracing::instrument(
     name = "Verify password hash",
     skip(expected_password_hash, password_candidate)
@@ -156,7 +173,7 @@ pub fn verify_password_hash(
         .map_err(AuthError::InvalidCredentials)
 }
 
-/// TODO: comment, refactoring
+/// TODO: comment, refactor
 #[tracing::instrument(
     name = "Registering a new user",
     skip(pool, credentials),
@@ -169,7 +186,7 @@ pub fn verify_password_hash(
 pub async fn register_user(
     credentials: &RegisterCredentials,
     pool: &PgPool,
-    admin: bool
+    admin: bool,
 ) -> Result<Uuid, RegisterError> {
     let user_id = Uuid::new_v4();
     let row = sqlx::query("SELECT id FROM users WHERE username = $1")

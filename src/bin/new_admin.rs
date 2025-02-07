@@ -1,4 +1,14 @@
-//! TODO: comment, domain
+//! # `new_admin`
+//!
+//! CLI tool that creates a new admin account.
+//!
+//! ## Usage
+//!
+//! After having initialized the database and provided a valid configuration,
+//! in th root directory call:
+//! ```bash
+//! cargo run --bin new_admin
+//! ```
 use std::io::{self, BufRead, StdinLock, Write};
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
@@ -7,13 +17,14 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use hj_blog_rs::{
+    domain::{ValidEmail, ValidPassword, ValidUserName},
     settings::get_config,
     telemetry::{get_subscriber, init_subscriber},
 };
 use rand::rngs::OsRng;
+use secrecy::SecretString;
 use sqlx::{query, Connection, PgConnection};
 use uuid::Uuid;
-use validator::ValidateEmail;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -36,8 +47,8 @@ async fn main() -> Result<(), anyhow::Error> {
         "INSERT INTO users (id, username, email, hash_pass, is_admin) VALUES ($1, $2, $3, $4, $5)",
     )
     .bind(Uuid::new_v4())
-    .bind(&username)
-    .bind(&email)
+    .bind(username.as_ref())
+    .bind(email.as_ref())
     .bind(&hash_pass)
     .bind(true)
     .execute(&mut connection)
@@ -52,19 +63,15 @@ async fn main() -> Result<(), anyhow::Error> {
 async fn get_username(
     stdin: &mut StdinLock<'static>,
     connection: &mut PgConnection,
-) -> Result<String, anyhow::Error> {
+) -> Result<ValidUserName, anyhow::Error> {
     print!("Type your name:\n> ");
     std::io::stdout().flush()?;
     let mut username = String::new();
     stdin.read_line(&mut username)?;
-    username = username.trim().to_string();
-    if username.len() > 60 {
-        return Err(anyhow::anyhow!(
-            "The name you typed is too long.\nProcedure aborted, try again."
-        ));
-    }
+    let username = ValidUserName::parse(&username)?;
+
     match query("SELECT id FROM users WHERE (username = $1)")
-        .bind(&username)
+        .bind(username.as_ref())
         .fetch_optional(connection)
         .await
     {
@@ -85,22 +92,15 @@ async fn get_username(
 async fn get_email(
     stdin: &mut StdinLock<'static>,
     connection: &mut PgConnection,
-) -> Result<String, anyhow::Error> {
+) -> Result<ValidEmail, anyhow::Error> {
     print!("Type your email:\n> ");
     std::io::stdout().flush()?;
     let mut email = String::new();
     stdin.read_line(&mut email)?;
-    email = email.trim().to_string();
-    if email.len() > 200 {
-        return Err(anyhow::anyhow!(
-            "The email you typed is too long.\nProcedure aborted, try again."
-        ));
-    }
-    if !email.validate_email() {
-        return Err(anyhow::anyhow!("The email you typed is invalid"));
-    }
+    let email = ValidEmail::parse(&email)?;
+
     match query("SELECT id FROM users WHERE (email = $1)")
-        .bind(&email)
+        .bind(email.as_ref())
         .fetch_optional(connection)
         .await
     {
@@ -150,19 +150,10 @@ fn get_hash_pass() -> Result<String, anyhow::Error> {
     disable_raw_mode()?;
     println!("");
 
-    if password.len() > 200 {
-        return Err(anyhow::anyhow!(
-            "The password you typed is too long.\nProcedure aborted, try again."
-        ));
-    }
-    if password.len() < 3 {
-        return Err(anyhow::anyhow!(
-            "The password you typed is too long.\nProcedure aborted, try again."
-        ));
-    }
+    let password = ValidPassword::parse(&SecretString::new(format!("{}", password).into()))?;
 
     let salt = SaltString::generate(OsRng);
     Ok(Argon2::default()
-        .hash_password(password.as_bytes(), &salt)?
+        .hash_password(password.expose_secret().as_bytes(), &salt)?
         .to_string())
 }

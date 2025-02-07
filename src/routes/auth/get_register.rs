@@ -17,8 +17,10 @@ pub struct RegisterTemplate {
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
-/// TODO: comment, refactor, telemetry
-pub async fn register(
+/// # `register_get`
+///
+/// Response to get "/auth/register"
+pub async fn register_get(
     session: TypedSession,
     messages: IncomingFlashMessages,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {

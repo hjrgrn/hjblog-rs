@@ -17,8 +17,10 @@ pub struct LoginTemplate {
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
-/// TODO: comment, refactor, telemetry
-pub async fn login(
+/// # `login_get`
+///
+/// Response to get "/auth/login"
+pub async fn login_get(
     session: TypedSession,
     messages: IncomingFlashMessages,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {
