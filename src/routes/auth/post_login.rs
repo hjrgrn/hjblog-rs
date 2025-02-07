@@ -20,7 +20,9 @@ pub struct LoginFormData {
     password: SecretString,
 }
 
-// TODO: comment, refactor, tracing
+/// # `login_post`
+///
+/// Response to post "/auth/login"
 #[tracing::instrument(
     skip(form, pool, session),
     fields(
@@ -28,12 +30,11 @@ pub struct LoginFormData {
         user_id=tracing::field::Empty
     )
 )]
-pub async fn login_form(
+pub async fn login_post(
     session: TypedSession,
     form: Form<LoginFormData>,
     pool: Data<PgPool>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
-    // FIX: code duplication in super::get_login::login
     let user_id = match session.get_user_id() {
         Ok(id) => id,
         Err(e) => {
@@ -97,7 +98,7 @@ pub async fn login_form(
                         HttpResponse::SeeOther()
                             .insert_header((LOCATION, "/auth/login"))
                             .finish(),
-                    ))
+                    ));
                 }
                 AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
             };

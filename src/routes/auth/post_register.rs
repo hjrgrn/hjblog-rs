@@ -21,7 +21,9 @@ pub struct LoginFormData {
     confirm_password: SecretString,
 }
 
-// TODO: comment, refactor, tracing
+/// # `register_post`
+///
+/// Response to post "/auth/register"
 #[tracing::instrument(
     skip(form, pool, session),
     fields(
@@ -30,12 +32,11 @@ pub struct LoginFormData {
         user_id=tracing::field::Empty
     )
 )]
-pub async fn register_form(
+pub async fn register_post(
     session: TypedSession,
     form: Form<LoginFormData>,
     pool: Data<PgPool>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
-    // FIX: code duplication in super::get_login::login
     let user_id = match session.get_user_id() {
         Ok(id) => id,
         Err(e) => {

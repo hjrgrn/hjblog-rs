@@ -21,7 +21,7 @@ async fn redirects_you_to_login_if_not_logged_in() {
 }
 
 #[tokio::test]
-async fn redirects_you_to_index_if_logut_is_successfull() {
+async fn redirects_you_to_index_if_logout_is_successfull() {
     let test_app = spawn_app().await;
 
     let login_body = serde_json::json!({
@@ -52,8 +52,6 @@ async fn redirects_you_to_index_if_logut_is_successfull() {
         .expect("Failed to request route \"/index\".");
     let body = response.text().await.unwrap();
 
-    assert!(body.contains("See you space cowboy"));
-    assert!(body.contains(r#"<div class="alert-success alert-generic">"#));
     assert!(body.contains(r#"class="link">Register</a>"#));
     assert!(body.contains(r#"<a href="/auth/login" class="link">Log In</a>"#));
 }

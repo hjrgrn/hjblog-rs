@@ -1,4 +1,5 @@
 use argon2::{password_hash::SaltString, Argon2, Params, PasswordHasher};
+use fake::{faker::internet::en::SafeEmail, Fake};
 use hj_blog_rs::{
     settings::{get_config, DatabaseSettings, Settings},
     startup::run,
@@ -12,13 +13,14 @@ use tokio::{select, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct TestApp {
     pub address: String,
     pub port: u16,
-    #[allow(dead_code)]
     pub db_pool: PgPool,
     pub api_client: reqwest::Client,
     pub test_admin: TestUser,
+    pub test_user: TestUser,
     /// `cancellation_token` is needed for cleanup.
     /// `TestApp.token.cancel()` needs to be called at
     /// the end of the test function.
@@ -71,8 +73,8 @@ pub struct TestUser {
 }
 
 impl TestUser {
-    pub async fn generate_admin(pool: &PgPool) -> Self {
-        let email = String::from("admin@admin.com");
+    pub async fn generate_user(pool: &PgPool, is_admin: bool) -> Self {
+        let email: String = SafeEmail().fake();
         let user_id = Uuid::new_v4();
         let username = Uuid::new_v4().to_string();
         let password = Uuid::new_v4().to_string();
@@ -88,7 +90,6 @@ impl TestUser {
         .unwrap()
         .to_string();
 
-        // FIX: code duplication in ./src/bin/new-admin.rs
         query(
             "INSERT INTO users (id, username, email, hash_pass, is_admin) VALUES ($1, $2, $3, $4, $5)",
         )
@@ -96,7 +97,7 @@ impl TestUser {
         .bind(&username)
         .bind(&email)
         .bind(&hash_pass)
-        .bind(true)
+        .bind(is_admin)
         .execute(pool)
         .await
         .expect("Failed to create a new user.");
@@ -168,7 +169,8 @@ pub async fn spawn_app() -> TestApp {
         .build()
         .unwrap();
 
-    let test_admin = TestUser::generate_admin(&db_pool).await;
+    let test_admin = TestUser::generate_user(&db_pool, true).await;
+    let test_user = TestUser::generate_user(&db_pool, false).await;
 
     TestApp {
         address,
@@ -176,6 +178,7 @@ pub async fn spawn_app() -> TestApp {
         db_pool,
         api_client,
         test_admin,
+        test_user,
         token,
         handle,
     }

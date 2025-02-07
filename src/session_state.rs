@@ -1,11 +1,14 @@
-use std::future::{ready, Ready};
+use std::{
+    fmt::Debug,
+    future::{ready, Ready},
+};
 
 use actix_session::{Session, SessionExt, SessionGetError, SessionInsertError};
 use actix_web::FromRequest;
 use sqlx::{query_as, PgPool};
 use uuid::Uuid;
 
-use crate::routes::CurrentUser;
+use crate::{auxiliaries::error_chain_fmt, routes::CurrentUser};
 
 pub struct TypedSession(Session);
 
@@ -24,21 +27,32 @@ impl TypedSession {
         self.0.get(Self::USER_ID_KEY)
     }
 
-    pub fn delete_user_id(&self) -> Option<String> {
-        self.0.remove(Self::USER_ID_KEY)
+    pub fn logout(&self) {
+        self.0.purge();
     }
 
+    /// # `get_current_user`
+    ///
+    /// Extract information relative to the current user from the database, if the user is
+    /// logged in.
+    #[tracing::instrument(name = "Extracting current user from database", skip(self, pool))]
     pub async fn get_current_user(
         &self,
         pool: &PgPool,
     ) -> Result<Option<CurrentUser>, CurrentUserError> {
-        let id = match self.get_user_id()? {
+        let user_id = match self.get_user_id()? {
             Some(id) => id,
             None => {
                 return Ok(None);
             }
         };
-        match get_current_user(id, pool).await? {
+        match query_as::<_, CurrentUser>(
+            "SELECT id, username, email, city_id, is_admin, profile_pic FROM users WHERE id = $1",
+        )
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?
+        {
             Some(cu) => Ok(Some(cu)),
             // NOTE: a key that is not in our database has been provided,
             // given our cookies are private we either have a bug or our
@@ -63,7 +77,10 @@ impl FromRequest for TypedSession {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+/// # `CurrentUserError`
+///
+/// Error enum that can be returned when using `TypedSession::get_current_user`
+#[derive(thiserror::Error)]
 pub enum CurrentUserError {
     #[error(transparent)]
     SessionGetError(#[from] SessionGetError),
@@ -73,16 +90,8 @@ pub enum CurrentUserError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
-/// TODO: comment, telemetry, error, incorporate it into TypedSession
-#[tracing::instrument(name = "Extracting current user from database", skip(pool))]
-async fn get_current_user(
-    user_id: Uuid,
-    pool: &PgPool,
-) -> Result<Option<CurrentUser>, sqlx::Error> {
-    query_as::<_, CurrentUser>(
-        "SELECT id, username, email, city_id, is_admin, profile_pic FROM users WHERE id = $1",
-    )
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await
+impl Debug for CurrentUserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
+    }
 }
