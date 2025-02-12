@@ -62,6 +62,15 @@ impl TestApp {
             .await
             .expect("Failed to request \"/auth\"/register")
     }
+
+    pub async fn post_change_username<Body: serde::Serialize>(&self, body: &Body) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/profile/change_username", &self.get_full_url()))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to request \"/profile\"/change_username")
+    }
 }
 
 #[allow(dead_code)]

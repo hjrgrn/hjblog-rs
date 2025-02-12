@@ -10,9 +10,9 @@ use secrecy::SecretString;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::{routes::errors::e500, session_state::TypedSession};
+use crate::{domain::{ValidPassword, ValidUserName}, routes::errors::e500, session_state::TypedSession};
 
-use super::auxiliaries::{validate_login_credentials, AuthError, LoginCredentials};
+use super::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials};
 
 #[derive(Deserialize)]
 pub struct LoginFormData {
@@ -52,14 +52,33 @@ pub async fn login_post(
         None => {}
     }
 
-    let credentials = LoginCredentials {
-        username: form.0.username,
-        password: form.0.password,
+    let username = match ValidUserName::parse(&form.0.username) {
+        Ok(n) => n,
+        Err(e) => {
+            FlashMessage::warning(&format!("{}", e)).send();
+            return Ok(HttpResponse::SeeOther()
+                .insert_header((LOCATION, "/profile/change_username"))
+                .finish());
+        }
+    };
+    let password = match ValidPassword::parse(&form.0.password) {
+        Ok(p) => p,
+        Err(e) => {
+            FlashMessage::warning(&format!("{}", e)).send();
+            return Ok(HttpResponse::SeeOther()
+                .insert_header((LOCATION, "/profile/change_username"))
+                .finish());
+        }
+    };
+
+    let credentials = BasicCredentials {
+        username,
+        password,
     };
 
     tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
 
-    match validate_login_credentials(credentials, &pool).await {
+    match validate_basic_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
             session.renew();

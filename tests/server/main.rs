@@ -4,4 +4,6 @@ mod errors;
 mod index;
 mod login;
 mod logout;
+mod manage_profile;
+mod change_username;
 mod register;
