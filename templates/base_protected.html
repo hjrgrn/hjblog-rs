@@ -45,40 +45,30 @@
         </div>
 
         <div class="nav_bar_right_items">
-            {% match current_user %}
-                {% when Some with (cu) %}
-                    <div class="link_container">
-                        <!-- TODO: manage profile -->
-                        <a href="/profile/manage_profile" class="link">{{ cu.username }}</a>
+            <div class="link_container">
+                <!-- TODO: manage profile -->
+                <a href="/profile/manage_profile" class="link">{{ current_user.username }}</a>
+            </div>
+            <div class="link_container">
+                <a href="/auth/logout" class="link">Log Out</a>
+            </div>
+            <div class="link_container">
+                <!-- TODO: weather -->
+                <a href="#" class="link">Weather</a>
+            </div>
+            {% if current_user.is_admin %}
+                <div class="link_container">
+                    <!-- TODO: post -->
+                    <a href="#" class="link">Post</a>
+                </div>
+            {% endif %}
+            {% match current_user.profile_pic %}
+                {% when Some with (path) %}
+                    <div class="img-container">
+                        <!-- TODO: profile pic -->
+                        <!-- <img src="#" alt="profile picture" /> -->
                     </div>
-                    <div class="link_container">
-                        <a href="/auth/logout" class="link">Log Out</a>
-                    </div>
-                    <div class="link_container">
-                        <!-- TODO: weather -->
-                        <a href="#" class="link">Weather</a>
-                    </div>
-                    {% if cu.is_admin %}
-                        <div class="link_container">
-                            <!-- TODO: post -->
-                            <a href="#" class="link">Post</a>
-                        </div>
-                    {% endif %}
-                    {% match cu.profile_pic %}
-                        {% when Some with (path) %}
-                            <div class="img-container">
-                                <!-- TODO: profile pic -->
-                                <!-- <img src="#" alt="profile picture" /> -->
-                            </div>
-                        {% when None %}
-                    {% endmatch %}
                 {% when None %}
-                    <div class="link_container">
-                        <a href="/auth/register" class="link">Register</a>
-                    </div>
-                    <div class="link_container">
-                        <a href="/auth/login" class="link">Log In</a>
-                    </div>
             {% endmatch %}
         </div>
     </nav>

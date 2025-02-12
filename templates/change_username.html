@@ -1,0 +1,27 @@
+{% extends "base_protected.html" %}
+
+{% block body %}
+<header class="auth_header">
+    <h1>Change Username</h1>
+</header>
+<div class="upload_form">
+    <form method="post" accept-charset="utf-8">
+        <fieldset>
+            <label>
+                <p>Old username: {{ current_user.username }}</p>
+                <input autofocus="true" id="username" name="username" placeholder="New Username" required type="text">
+            </label>
+            <label>
+                <p>Password</p>
+                <input type="password" placeholder="Password" name="password" id="password" required />
+            </label>
+            <label>
+                <input class="bottone_auth" id="submit" name="submit" type="submit" value="Submit">
+            </label>
+        </fieldset>
+    </form>
+</div>
+<div class="upload_form">
+    <p>Go back to your <a href="/profile/manage_profile" class="auth_link">profile</a> page.</p>
+</div>
+{% endblock body %}

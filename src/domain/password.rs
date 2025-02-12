@@ -24,3 +24,9 @@ impl ValidPassword {
         self.0.expose_secret()
     }
 }
+
+impl AsRef<SecretString> for ValidPassword {
+    fn as_ref(&self) -> &SecretString {
+        &self.0
+    }
+}

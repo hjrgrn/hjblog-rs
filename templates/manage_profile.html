@@ -1,0 +1,55 @@
+{% extends "base_protected.html" %}
+
+{% block body %}
+<header class="presentation">
+    <!-- TODO: picture -->
+    {#<img class="profile-picture" src="{{ profile_pic }}" alt="profile picture" />#}
+    <h1>{{ current_user.username }}'s informations</h1>
+    <p>Here you can change your info.</p>
+</header>
+<div class="index-form">
+    <!-- TODO: all -->
+    <form action="/profile/change_username" method="get" accept-charset="utf-8">
+        <p>Username: {{ current_user.username }}</p>
+        <button>Change</button>
+    </form>
+    {#
+    <form action="{{ url_for('profile.change_email') }}" method="get" accept-charset="utf-8">
+        <p>Email: {{ current_user['email'] }}</p>
+        <button>Change</button>
+    </form>
+    <form action="{{ url_for('profile.change_password') }}" method="get" accept-charset="utf-8">
+        <p>Password</p>
+        <button>Change</button>
+    </form>
+    <form action="{{ url_for('profile.change_city') }}" method="get" accept-charset="utf-8">
+        {% if city_name %}
+        <p>City: {{ city_name }}</p>
+        {% else %}
+        <p>City: Not yet configured</p>
+        {% endif %}
+        <button>Change</button>
+    </form>
+    <form action="{{ url_for('profile.change_picture') }}" method="get" accept-charset="utf-8">
+        <p>Profile picture</p>
+        <button>Change</button>
+    </form>
+    {% if current_user["is_two_factor_authentication_enabled"] %}
+    <form action="{{ url_for('profile.disable_two_factor_auth') }}" method="get" accept-charset="utf-8">
+        <p>Deactivate 2fa</p>
+        <button>Disable</button>
+    </form>
+    {% else %}
+    <form action="{{ url_for('profile.setup_two_factor_auth') }}" method="get" accept-charset="utf-8">
+        <p>Activate 2fa</p>
+        <button>Activate</button>
+    </form>
+    {% endif %}
+    <form action="{{ url_for('profile.delete_account') }}" method="get" accept-charset="utf-8">
+        <p>Delete your account</p>
+        <button class="delete">Delete</button>
+    </form>
+    #}
+</div>
+<br></br>
+{% endblock body %}

@@ -15,9 +15,9 @@ use crate::domain::{ValidEmail, ValidPassword};
 use crate::telemetry::spawn_blocking_with_tracing;
 
 #[derive(Debug)]
-pub struct LoginCredentials {
-    pub username: String,
-    pub password: SecretString,
+pub struct BasicCredentials {
+    pub username: ValidUserName,
+    pub password: ValidPassword,
 }
 
 #[derive(Debug)]
@@ -94,21 +94,24 @@ impl Debug for RegisterError {
 /// NOTE: this function prevent timing attack by performing the same amount of work even if it didn't receive
 /// a valid username, [OWASP](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/03-Identity_Management_Testing/04-Testing_for_Account_Enumeration_and_Guessable_User_Account).
 #[tracing::instrument(name = "Validate credentials", skip(credentials, pool))]
-pub async fn validate_login_credentials(
-    credentials: LoginCredentials,
+pub async fn validate_basic_credentials(
+    credentials: BasicCredentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, AuthError> {
     let mut user_id = None;
     let mut expected_password_hash = SecretString::new("$argon2id$v=19$m=19456,t=2,p=1$whUl96AIbUiqrY6CINRAKg$+7nxehFtPiM0dXnxD9Ln0BMEi2SwZFOf8YDlXzJd8TU".into());
     if let Some((stored_user_id, stored_password_hash)) =
-        get_stored_credentials(&credentials.username, &pool).await?
+        get_stored_credentials(&credentials.username.as_ref(), &pool).await?
     {
         user_id = Some(stored_user_id);
         expected_password_hash = stored_password_hash;
     };
 
     spawn_blocking_with_tracing(move || {
-        verify_password_hash(expected_password_hash, credentials.password)
+        verify_password_hash(
+            &expected_password_hash,
+            credentials.password.as_ref(),
+        )
     })
     .await
     .context("Failed to spawn blocking task")??;
@@ -158,9 +161,10 @@ pub async fn get_stored_credentials(
     skip(expected_password_hash, password_candidate)
 )]
 pub fn verify_password_hash(
-    expected_password_hash: SecretString,
-    password_candidate: SecretString,
+    expected_password_hash: &SecretString,
+    password_candidate: &SecretString,
 ) -> Result<(), AuthError> {
+
     let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
         .context("Failed to parse hash in PHC string format.")?;
 
