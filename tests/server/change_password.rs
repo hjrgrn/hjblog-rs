@@ -3,7 +3,7 @@ use uuid::Uuid;
 use crate::auxiliaries::{assert_redirects_to, spawn_app};
 
 #[tokio::test]
-async fn test_change_username_template() {
+async fn accept_request_if_logged_in() {
     let test_app = spawn_app().await;
 
     let login_body = serde_json::json!({
@@ -14,24 +14,19 @@ async fn test_change_username_template() {
     assert_redirects_to(&response, "/");
 
     let response = test_app
-        .get_request("/profile/change_username")
+        .get_request("/profile/change_password")
         .await
         .expect("Failed to request route \"/\".");
 
-    let body = response.text().await.unwrap();
-
-    assert!(body.contains(&format!(
-        r#"<p>Old username: {}</p>"#,
-        &test_app.test_admin.username
-    )));
+    assert!(response.status().as_u16() == 200);
 }
 
 #[tokio::test]
-async fn change_username_redirects_you_to_login_if_not_logged_in() {
+async fn change_password_redirects_you_to_login_if_not_logged_in() {
     let test_app = spawn_app().await;
 
     let response = test_app
-        .get_request("/profile/change_username")
+        .get_request("/profile/change_password")
         .await
         .expect("Failed to request route \"/auth/logout\".");
     assert_redirects_to(&response, "/auth/login");
@@ -49,7 +44,7 @@ async fn change_username_redirects_you_to_login_if_not_logged_in() {
 }
 
 #[tokio::test]
-async fn changes_username_redirect_to_index_if_successfull() {
+async fn change_password_logs_you_out_if_wrong_old_password() {
     let test_app = spawn_app().await;
 
     let login_body = serde_json::json!({
@@ -59,52 +54,73 @@ async fn changes_username_redirect_to_index_if_successfull() {
     let response = test_app.post_login(&login_body).await;
     assert_redirects_to(&response, "/");
 
-    let new_username = Uuid::new_v4().to_string();
+    let new_password = Uuid::new_v4().to_string();
 
     let change_username_body = serde_json::json!({
-        "username": new_username,
-        "password": &test_app.test_admin.password,
+        "old_password": "random-password",
+        "new_password": &new_password
     });
 
-    let response = test_app.post_change_username(&change_username_body).await;
+    let response = test_app.post_change_password(&change_username_body).await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
         .get_request("/")
         .await
-        .expect("Failed to request route \"/auth/login\".");
+        .expect("Failed to request route \"/\".");
+    let body = response.text().await.unwrap();
+    assert!(!body.contains(&format!(
+        r#"<a href="/profile/manage_profile" class="link">{}</a>"#,
+        &test_app.test_admin.username
+    )))
+}
+
+#[tokio::test]
+async fn changes_password_redirect_to_index_if_successfull_and_changes_password() {
+    let test_app = spawn_app().await;
+
+    let login_body = serde_json::json!({
+        "username": &test_app.test_admin.username,
+        "password": &test_app.test_admin.password,
+    });
+    let response = test_app.post_login(&login_body).await;
+    assert_redirects_to(&response, "/");
+
+    let new_password = Uuid::new_v4().to_string();
+
+    let change_username_body = serde_json::json!({
+        "old_password": &test_app.test_admin.password,
+        "new_password": &new_password
+    });
+
+    let response = test_app.post_change_password(&change_username_body).await;
+    assert_redirects_to(&response, "/");
+
+    let response = test_app
+        .get_request("/")
+        .await
+        .expect("Failed to request route \"/\".");
     let body = response.text().await.unwrap();
 
-    assert!(body.contains(&format!(
-        "Your username has been updated to {}",
-        new_username
-    )));
+    assert!(body.contains("Your password has been updated."));
     assert!(body.contains(r#"<div class="alert-success alert-generic">"#));
     assert!(body.contains(&format!(
         r#"<a href="/profile/manage_profile" class="link">{}</a>"#,
-        new_username
+        &test_app.test_admin.username
     )));
-}
 
-#[tokio::test]
-async fn redirect_to_index_and_logout_if_wrong_password() {
-    let test_app = spawn_app().await;
+    let response = test_app
+        .get_request("/auth/logout")
+        .await
+        .expect("Failed to request route \"/auth/logout\".");
+    assert_redirects_to(&response, "/");
 
     let login_body = serde_json::json!({
         "username": &test_app.test_admin.username,
-        "password": &test_app.test_admin.password,
+        "password": &new_password
     });
+
     let response = test_app.post_login(&login_body).await;
-    assert_redirects_to(&response, "/");
-
-    let new_username = Uuid::new_v4().to_string();
-
-    let change_username_body = serde_json::json!({
-        "username": new_username,
-        "password": "random-password",
-    });
-
-    let response = test_app.post_change_username(&change_username_body).await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -112,35 +128,8 @@ async fn redirect_to_index_and_logout_if_wrong_password() {
         .await
         .expect("Failed to request route \"/\".");
     let body = response.text().await.unwrap();
-
-    assert!(body.contains(r#"<a href="/auth/login" class="link">Log In</a>"#));
-}
-
-#[tokio::test]
-async fn doesn_t_allow_you_to_change_if_already_existing_name() {
-    let test_app = spawn_app().await;
-
-    let login_body = serde_json::json!({
-        "username": &test_app.test_admin.username,
-        "password": &test_app.test_admin.password,
-    });
-    let response = test_app.post_login(&login_body).await;
-    assert_redirects_to(&response, "/");
-
-    let change_username_body = serde_json::json!({
-        "username": &test_app.test_user.username,
-        "password": &test_app.test_admin.password,
-    });
-
-    let response = test_app.post_change_username(&change_username_body).await;
-    assert_redirects_to(&response, "/profile/change_username");
-
-    let response = test_app
-        .get_request("/")
-        .await
-        .expect("Failed to request route \"/\".");
-    let body = response.text().await.unwrap();
-
-    assert!(body.contains("The new name you provided is already taken, please try again."));
-    assert!(body.contains(r#"<div class="alert-danger alert-generic">"#));
+    assert!(body.contains(&format!(
+        r#"<a href="/profile/manage_profile" class="link">{}</a>"#,
+        &test_app.test_admin.username
+    )))
 }

@@ -12,14 +12,14 @@ use askama_actix::Template;
 use sqlx::PgPool;
 
 #[derive(Template)]
-#[template(path = "change_username.html")]
-pub struct ChangeUsernameTemplate {
+#[template(path = "change_password.html")]
+pub struct ChangePasswordTemplate {
     pub title: Option<String>,
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
     pub current_user: CurrentUser,
 }
 
-pub async fn change_username_get(
+pub async fn change_password_get(
     messages: IncomingFlashMessages,
     session: TypedSession,
     pool: Data<PgPool>,
@@ -43,8 +43,8 @@ pub async fn change_username_get(
         }
     };
 
-    let ctx = ChangeUsernameTemplate {
-        title: Some(String::from("Change Username")),
+    let ctx = ChangePasswordTemplate {
+        title: Some(String::from("Change Password")),
         flash_messages,
         current_user,
     };

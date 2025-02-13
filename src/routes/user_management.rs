@@ -1,4 +1,5 @@
-pub mod scope;
-mod manage_profile;
-mod change_username;
 mod auxiliaries;
+mod change_password;
+mod change_username;
+mod manage_profile;
+pub mod scope;
