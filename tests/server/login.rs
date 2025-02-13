@@ -10,6 +10,16 @@ async fn redirect_to_index_if_login_success() {
     });
     let response = test_app.post_login(&login_body).await;
     assert_redirects_to(&response, "/");
+
+    let response = test_app
+        .get_request("/")
+        .await
+        .expect("Failed to request route \"/\".");
+    let body = response.text().await.unwrap();
+    assert!(body.contains(&format!(
+        r#"<a href="/profile/manage_profile" class="link">{}</a>"#,
+        &test_app.test_admin.username
+    )))
 }
 
 #[tokio::test]

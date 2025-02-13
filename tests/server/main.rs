@@ -1,9 +1,10 @@
 mod auxiliaries;
-mod health_check;
+mod change_password;
+mod change_username;
 mod errors;
+mod health_check;
 mod index;
 mod login;
 mod logout;
 mod manage_profile;
-mod change_username;
 mod register;
