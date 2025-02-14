@@ -17,11 +17,11 @@
         <p>Password</p>
         <button>Change</button>
     </form>
-    {#
-    <form action="{{ url_for('profile.change_email') }}" method="get" accept-charset="utf-8">
-        <p>Email: {{ current_user['email'] }}</p>
+    <form action="/profile/change_email" method="get" accept-charset="utf-8">
+        <p>Email: {{ current_user.email }}</p>
         <button>Change</button>
     </form>
+    {#
     <form action="{{ url_for('profile.change_city') }}" method="get" accept-charset="utf-8">
         {% if city_name %}
         <p>City: {{ city_name }}</p>

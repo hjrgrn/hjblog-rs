@@ -11,13 +11,13 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
-pub struct ChangeUsernameData {
-    username: String,
+pub struct ChangeEmailData {
+    email: String,
     password: SecretString,
 }
 
 use crate::{
-    domain::{ValidPassword, ValidUserName},
+    domain::{ValidEmail, ValidPassword, ValidUserName},
     routes::{
         auth::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials},
         errors::e500,
@@ -26,23 +26,24 @@ use crate::{
     session_state::TypedSession,
 };
 
-/// # `change_username_post`
+/// # `change_email_post`
 ///
-/// Response to post "/profile/change_username"
+/// Response to post "/profile/change_email"
 /// TODO: refactoring
 #[tracing::instrument(
-    name = "Change Username",
+    name = "Change Email",
     skip(form, pool, session),
     fields(
-        old_username=tracing::field::Empty,
-        new_username=tracing::field::Empty,
+        old_email=tracing::field::Empty,
+        new_email=tracing::field::Empty,
     )
 )]
-pub async fn change_username_post(
+pub async fn change_email_post(
     session: TypedSession,
     pool: Data<PgPool>,
-    form: Form<ChangeUsernameData>,
+    form: Form<ChangeEmailData>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
+    // FIX: code duplication
     let current_user = match session.get_current_user(&pool).await {
         Ok(opt) => {
             match opt {
@@ -60,12 +61,12 @@ pub async fn change_username_post(
             return Err(e500(e.into()).await);
         }
     };
-    let new_username = match ValidUserName::parse(&form.0.username) {
+    let new_email = match ValidEmail::parse(&form.0.email) {
         Ok(n) => n,
         Err(e) => {
             FlashMessage::warning(&format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
+                .insert_header((LOCATION, "/profile/change_email"))
                 .finish());
         }
     };
@@ -74,34 +75,36 @@ pub async fn change_username_post(
         Err(e) => {
             FlashMessage::warning(&format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
+                .insert_header((LOCATION, "/profile/change_email"))
                 .finish());
         }
     };
 
-    let old_username = match ValidUserName::parse(&current_user.username) {
+    let old_email = match ValidEmail::parse(&current_user.email) {
         Ok(p) => p,
         Err(e) => {
             FlashMessage::warning(&format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
+                .insert_header((LOCATION, "/profile/change_email"))
                 .finish());
         }
     };
 
-    tracing::Span::current().record(
-        "old_username",
-        &tracing::field::display(old_username.as_ref()),
-    );
-    tracing::Span::current().record(
-        "new_username",
-        &tracing::field::display(new_username.as_ref()),
-    );
-
-    let credentials = BasicCredentials {
-        username: old_username,
-        password,
+    // IDEA: return domains from `.get_current_user` istead of raw Strings and such
+    let username = match ValidUserName::parse(&current_user.username) {
+        Ok(u) => u,
+        Err(e) => {
+            FlashMessage::warning(&format!("{}", e)).send();
+            return Ok(HttpResponse::SeeOther()
+                .insert_header((LOCATION, "/profile/change_email"))
+                .finish());
+        }
     };
+
+    let credentials = BasicCredentials { username, password };
+
+    tracing::Span::current().record("old_email", &tracing::field::display(old_email.as_ref()));
+    tracing::Span::current().record("new_email", &tracing::field::display(new_email.as_ref()));
 
     match validate_basic_credentials(credentials, &pool).await {
         Ok(_) => {}
@@ -121,11 +124,11 @@ pub async fn change_username_post(
             };
         }
     }
-    match update_name(&pool, new_username.as_ref(), &current_user.id).await {
+    match update_email(&pool, new_email.as_ref(), &current_user.id).await {
         Ok(()) => {
             FlashMessage::info(format!(
-                "Your username has been updated to {}",
-                new_username.as_ref()
+                "Your email has been updated to {}",
+                new_email.as_ref()
             ))
             .send();
             Ok(HttpResponse::SeeOther()
@@ -138,7 +141,7 @@ pub async fn change_username_post(
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()
-                        .insert_header((LOCATION, "/profile/change_username"))
+                        .insert_header((LOCATION, "/profile/change_email"))
                         .finish(),
                 ));
             }
@@ -149,21 +152,21 @@ pub async fn change_username_post(
     }
 }
 
-// TODO: comment, refactoring
-async fn update_name(
+// TODO: comment, refactoring, code duplication
+async fn update_email(
     pool: &PgPool,
-    username: &str,
+    email: &str,
     user_id: &Uuid,
 ) -> Result<(), UpdateProfileError> {
-    let res = sqlx::query("SELECT id FROM users WHERE username = $1")
-        .bind(username)
+    let res = sqlx::query("SELECT id FROM users WHERE email = $1")
+        .bind(email)
         .fetch_optional(pool)
         .await;
     match res {
         Ok(opt) => match opt {
             Some(_) => {
                 return Err(anyhow::anyhow!(
-                    "The new name you provided is already taken, please try again."
+                    "The new email you provided is already taken, please try again."
                 )
                 .into());
             }
@@ -173,8 +176,8 @@ async fn update_name(
             return Err(e.into());
         }
     }
-    sqlx::query("UPDATE users SET username = $1 WHERE (id = $2)")
-        .bind(username)
+    sqlx::query("UPDATE users SET email = $1 WHERE (id = $2)")
+        .bind(email)
         .bind(user_id)
         .execute(pool)
         .await?;
