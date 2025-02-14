@@ -140,7 +140,6 @@ async fn update_password(
     password: &SecretString,
     user_id: &Uuid,
 ) -> Result<(), UpdateProfileError> {
-    // FIX: we are hashing twice for no reason
     let salt = SaltString::generate(OsRng);
     let hash_pass = Argon2::default()
         .hash_password(password.expose_secret().as_bytes(), &salt)

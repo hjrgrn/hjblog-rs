@@ -76,6 +76,19 @@ impl TestApp {
             .expect("Failed to request \"/profile/change_username\"")
     }
 
+    // FIX: code duplication
+    pub async fn post_change_email<Body: serde::Serialize>(
+        &self,
+        body: &Body,
+    ) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/profile/change_email", &self.get_full_url()))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to request \"/profile/change_email\"")
+    }
+
     pub async fn post_change_password<Body: serde::Serialize>(
         &self,
         body: &Body,
