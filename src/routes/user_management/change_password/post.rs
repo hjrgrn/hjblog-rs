@@ -8,7 +8,7 @@ use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use rand::rngs::OsRng;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -27,6 +27,7 @@ use crate::{
         user_management::auxiliaries::UpdateProfileError,
     },
     session_state::TypedSession,
+    telemetry::spawn_blocking_with_tracing,
 };
 
 /// # `change_password_post`
@@ -109,7 +110,7 @@ pub async fn change_password_post(
             };
         }
     }
-    match update_password(&pool, new_password.as_ref(), &current_user.id).await {
+    match update_password(&pool, new_password, &current_user.id).await {
         Ok(()) => {
             FlashMessage::info("Your password has been updated.").send();
             Ok(HttpResponse::SeeOther()
@@ -134,17 +135,23 @@ pub async fn change_password_post(
     }
 }
 
-// TODO: comment, refactoring
+/// `update_password`
+///
+/// `change_password_post`'s helper, updates the database with the new hash of the password.
 async fn update_password(
     pool: &PgPool,
-    password: &SecretString,
+    password: ValidPassword,
     user_id: &Uuid,
 ) -> Result<(), UpdateProfileError> {
-    let salt = SaltString::generate(OsRng);
-    let hash_pass = Argon2::default()
-        .hash_password(password.expose_secret().as_bytes(), &salt)
-        .context("Problems with hashing passwords with Argon2")?
-        .to_string();
+    let hash_pass = spawn_blocking_with_tracing(move || {
+        let salt = SaltString::generate(OsRng);
+        let hash_pass = Argon2::default()
+            .hash_password(password.expose_secret().as_bytes(), &salt)
+            .context("Problems with hashing passwords with Argon2")?;
+        Ok::<String, anyhow::Error>(hash_pass.to_string())
+    })
+    .await
+    .context("Failed to spawn a blocking task.")??;
 
     sqlx::query("UPDATE users SET hash_pass = $1 WHERE (id = $2)")
         .bind(hash_pass)

@@ -38,15 +38,6 @@ impl TestApp {
         format!("http://{}:{}", self.address, self.port)
     }
 
-    pub async fn post_login<Body: serde::Serialize>(&self, body: &Body) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/auth/login", &self.get_full_url()))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to execute the request")
-    }
-
     pub async fn get_request(&self, path: &str) -> Result<reqwest::Response, reqwest::Error> {
         self.api_client
             .get(&format!("{}{}", &self.get_full_url(), path))
@@ -54,51 +45,17 @@ impl TestApp {
             .await
     }
 
-    pub async fn post_register<Body: serde::Serialize>(&self, body: &Body) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/auth/register", &self.get_full_url()))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to request \"/auth\"/register")
-    }
-
-    // FIX: code duplication
-    pub async fn post_change_username<Body: serde::Serialize>(
+    pub async fn post_request<Body: serde::Serialize>(
         &self,
         body: &Body,
+        path: &str,
     ) -> reqwest::Response {
         self.api_client
-            .post(&format!("{}/profile/change_username", &self.get_full_url()))
+            .post(&format!("{}{}", &self.get_full_url(), path))
             .form(body)
             .send()
             .await
-            .expect("Failed to request \"/profile/change_username\"")
-    }
-
-    // FIX: code duplication
-    pub async fn post_change_email<Body: serde::Serialize>(
-        &self,
-        body: &Body,
-    ) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/profile/change_email", &self.get_full_url()))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to request \"/profile/change_email\"")
-    }
-
-    pub async fn post_change_password<Body: serde::Serialize>(
-        &self,
-        body: &Body,
-    ) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/profile/change_password", &self.get_full_url()))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to request \"/profile/change_password\"")
+            .expect(&format!("Failed to request \"{}\"", path))
     }
 }
 

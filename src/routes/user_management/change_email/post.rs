@@ -22,6 +22,7 @@ use crate::{
         auth::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials},
         errors::e500,
         user_management::auxiliaries::UpdateProfileError,
+        CurrentUser,
     },
     session_state::TypedSession,
 };
@@ -43,7 +44,6 @@ pub async fn change_email_post(
     pool: Data<PgPool>,
     form: Form<ChangeEmailData>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
-    // FIX: code duplication
     let current_user = match session.get_current_user(&pool).await {
         Ok(opt) => {
             match opt {
@@ -61,45 +61,16 @@ pub async fn change_email_post(
             return Err(e500(e.into()).await);
         }
     };
-    let new_email = match ValidEmail::parse(&form.0.email) {
-        Ok(n) => n,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_email"))
-                .finish());
-        }
-    };
-    let password = match ValidPassword::parse(&form.0.password) {
-        Ok(p) => p,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_email"))
-                .finish());
-        }
-    };
-
-    let old_email = match ValidEmail::parse(&current_user.email) {
-        Ok(p) => p,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_email"))
-                .finish());
-        }
-    };
-
-    // IDEA: return domains from `.get_current_user` istead of raw Strings and such
-    let username = match ValidUserName::parse(&current_user.username) {
-        Ok(u) => u,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_email"))
-                .finish());
-        }
-    };
+    let (new_email, password, old_email, username) =
+        match get_infos_for_email(&form.0, &current_user) {
+            Ok(t) => t,
+            Err(e) => {
+                FlashMessage::warning(&format!("{}", e)).send();
+                return Ok(HttpResponse::SeeOther()
+                    .insert_header((LOCATION, "/profile/change_email"))
+                    .finish());
+            }
+        };
 
     let credentials = BasicCredentials { username, password };
 
@@ -152,7 +123,9 @@ pub async fn change_email_post(
     }
 }
 
-// TODO: comment, refactoring, code duplication
+/// `update_email`
+///
+/// `change_email_post`'s helper function, updates the database with the new email
 async fn update_email(
     pool: &PgPool,
     email: &str,
@@ -182,4 +155,20 @@ async fn update_email(
         .execute(pool)
         .await?;
     Ok(())
+}
+
+/// `get_infos_for_email`
+///
+/// `change_email_post`'s helper function that simplifies the code
+/// in exchange for a small amount of resources.
+/// Returns new_email, password, old_email, username in this order, or an error.
+fn get_infos_for_email(
+    form: &ChangeEmailData,
+    current_user: &CurrentUser,
+) -> Result<(ValidEmail, ValidPassword, ValidEmail, ValidUserName), anyhow::Error> {
+    let new_email = ValidEmail::parse(&form.email)?;
+    let password = ValidPassword::parse(&form.password)?;
+    let old_email = ValidEmail::parse(&current_user.email)?;
+    let username = ValidUserName::parse(&current_user.username)?;
+    Ok((new_email, password, old_email, username))
 }

@@ -28,7 +28,7 @@ async fn redirects_you_to_index_if_logout_is_successfull() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let _ = test_app.post_login(&login_body).await;
+    let _ = test_app.post_request(&login_body, "/auth/login").await;
     // Check if we are logged in
     let response = test_app
         .get_request("/")

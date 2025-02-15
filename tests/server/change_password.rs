@@ -10,7 +10,7 @@ async fn accept_request_if_logged_in() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -51,17 +51,19 @@ async fn change_password_logs_you_out_if_wrong_old_password() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_password = Uuid::new_v4().to_string();
 
-    let change_username_body = serde_json::json!({
+    let change_password_body = serde_json::json!({
         "old_password": "random-password",
         "new_password": &new_password
     });
 
-    let response = test_app.post_change_password(&change_username_body).await;
+    let response = test_app
+        .post_request(&change_password_body, "/profile/change_password")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -83,17 +85,19 @@ async fn changes_password_redirect_to_index_if_successfull_and_changes_password(
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_password = Uuid::new_v4().to_string();
 
-    let change_username_body = serde_json::json!({
+    let change_password_body = serde_json::json!({
         "old_password": &test_app.test_admin.password,
         "new_password": &new_password
     });
 
-    let response = test_app.post_change_password(&change_username_body).await;
+    let response = test_app
+        .post_request(&change_password_body, "/profile/change_password")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -120,7 +124,7 @@ async fn changes_password_redirect_to_index_if_successfull_and_changes_password(
         "password": &new_password
     });
 
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
