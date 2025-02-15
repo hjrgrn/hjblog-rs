@@ -10,7 +10,7 @@ async fn test_change_username_template() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -56,7 +56,7 @@ async fn changes_username_redirect_to_index_if_successfull() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_username = Uuid::new_v4().to_string();
@@ -66,7 +66,7 @@ async fn changes_username_redirect_to_index_if_successfull() {
         "password": &test_app.test_admin.password,
     });
 
-    let response = test_app.post_change_username(&change_username_body).await;
+    let response = test_app.post_request(&change_username_body, "/profile/change_username").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -94,7 +94,7 @@ async fn change_username_redirects_to_index_and_logout_if_wrong_password() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_username = Uuid::new_v4().to_string();
@@ -104,7 +104,7 @@ async fn change_username_redirects_to_index_and_logout_if_wrong_password() {
         "password": "random-password",
     });
 
-    let response = test_app.post_change_username(&change_username_body).await;
+    let response = test_app.post_request(&change_username_body, "/profile/change_username").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -124,7 +124,7 @@ async fn change_username_doesn_t_allow_you_to_change_if_already_existing_name() 
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let change_username_body = serde_json::json!({
@@ -132,7 +132,7 @@ async fn change_username_doesn_t_allow_you_to_change_if_already_existing_name() 
         "password": &test_app.test_admin.password,
     });
 
-    let response = test_app.post_change_username(&change_username_body).await;
+    let response = test_app.post_request(&change_username_body, "/profile/change_username").await;
     assert_redirects_to(&response, "/profile/change_username");
 
     let response = test_app

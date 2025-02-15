@@ -22,6 +22,7 @@ use crate::{
         auth::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials},
         errors::e500,
         user_management::auxiliaries::UpdateProfileError,
+        CurrentUser,
     },
     session_state::TypedSession,
 };
@@ -60,34 +61,16 @@ pub async fn change_username_post(
             return Err(e500(e.into()).await);
         }
     };
-    let new_username = match ValidUserName::parse(&form.0.username) {
-        Ok(n) => n,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
-                .finish());
-        }
-    };
-    let password = match ValidPassword::parse(&form.0.password) {
-        Ok(p) => p,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
-                .finish());
-        }
-    };
-
-    let old_username = match ValidUserName::parse(&current_user.username) {
-        Ok(p) => p,
-        Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/profile/change_username"))
-                .finish());
-        }
-    };
+    let (new_username, password, old_username) =
+        match get_infos_for_username(&form.0, &current_user) {
+            Ok(t) => t,
+            Err(e) => {
+                FlashMessage::warning(&format!("{}", e)).send();
+                return Ok(HttpResponse::SeeOther()
+                    .insert_header((LOCATION, "/profile/change_username"))
+                    .finish());
+            }
+        };
 
     tracing::Span::current().record(
         "old_username",
@@ -149,7 +132,9 @@ pub async fn change_username_post(
     }
 }
 
-// TODO: comment, refactoring
+/// `update_name`
+///
+/// `change_username`'s helper, updates the database with the new username.
 async fn update_name(
     pool: &PgPool,
     username: &str,
@@ -179,4 +164,20 @@ async fn update_name(
         .execute(pool)
         .await?;
     Ok(())
+}
+
+/// `get_infos_for_username`
+///
+/// `change_email_post`'s helper function that simplifies the code
+/// in exchange for a small amount of resources.
+/// Returns new_username, password and old_username in this order, or an error.
+fn get_infos_for_username(
+    form: &ChangeUsernameData,
+    current_user: &CurrentUser,
+) -> Result<(ValidUserName, ValidPassword, ValidUserName), anyhow::Error> {
+    let new_username = ValidUserName::parse(&form.username)?;
+    let password = ValidPassword::parse(&form.password)?;
+    let old_username = ValidUserName::parse(&current_user.username)?;
+
+    Ok((new_username, password, old_username))
 }

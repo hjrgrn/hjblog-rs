@@ -36,7 +36,7 @@ async fn testing_navbar_when_logged_as_admin() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let _ = test_app.post_login(&login_body).await;
+    let _ = test_app.post_request(&login_body, "/auth/login").await;
 
     let response = test_app
         .api_client

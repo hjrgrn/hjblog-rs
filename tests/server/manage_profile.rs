@@ -31,7 +31,7 @@ async fn test_manage_profile_template() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app

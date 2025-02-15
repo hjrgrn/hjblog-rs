@@ -18,7 +18,9 @@ async fn redirect_to_index_if_register_success() {
         "password": password,
         "confirm_password": password
     });
-    let response = test_app.post_register(&register_body).await;
+    let response = test_app
+        .post_request(&register_body, "/auth/register")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -43,7 +45,7 @@ async fn redirect_to_index_if_already_logged_in() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let _ = test_app.post_login(&login_body).await;
+    let _ = test_app.post_request(&login_body, "/auth/login").await;
     let response = test_app
         .get_request("/auth/register")
         .await
@@ -70,8 +72,9 @@ async fn redirect_to_index_if_already_logged_in() {
         "password": password,
         "confirm_password": password
     });
-    let response = test_app.post_register(&register_body).await;
-
+    let response = test_app
+        .post_request(&register_body, "/auth/register")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -124,7 +127,9 @@ async fn refuse_invalid_username() {
             "password": case.1,
             "confirm_password": case.1
         });
-        let response = test_app.post_register(&register_body).await;
+        let response = test_app
+            .post_request(&register_body, "/auth/register")
+            .await;
         assert_redirects_to(&response, "/auth/register");
         let response = test_app
             .get_request("/")
@@ -180,7 +185,9 @@ async fn refuse_invalid_email() {
             "password": case.1,
             "confirm_password": case.1
         });
-        let response = test_app.post_register(&register_body).await;
+        let response = test_app
+            .post_request(&register_body, "/auth/register")
+            .await;
         assert_redirects_to(&response, "/auth/register");
         let response = test_app
             .get_request("/")
@@ -209,7 +216,9 @@ async fn fail_to_register_when_user_types_two_different_passwords() {
         "password": password,
         "confirm_password": another_password
     });
-    let response = test_app.post_register(&register_body).await;
+    let response = test_app
+        .post_request(&register_body, "/auth/register")
+        .await;
     assert_redirects_to(&response, "/auth/register");
 
     let response = test_app
@@ -236,7 +245,9 @@ async fn fail_to_register_when_user_email_already_taken() {
         "password": password,
         "confirm_password": password
     });
-    let response = test_app.post_register(&register_body).await;
+    let response = test_app
+        .post_request(&register_body, "/auth/register")
+        .await;
     assert_redirects_to(&response, "/auth/register");
 
     let response = test_app
@@ -263,7 +274,9 @@ async fn fail_to_register_when_user_name_already_taken() {
         "password": password,
         "confirm_password": password
     });
-    let response = test_app.post_register(&register_body).await;
+    let response = test_app
+        .post_request(&register_body, "/auth/register")
+        .await;
     assert_redirects_to(&response, "/auth/register");
 
     let response = test_app

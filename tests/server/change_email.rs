@@ -10,7 +10,7 @@ async fn test_change_email_template() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -56,7 +56,7 @@ async fn changes_email_redirect_to_index_if_successfull() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_email: String = SafeEmail().fake();
@@ -66,7 +66,9 @@ async fn changes_email_redirect_to_index_if_successfull() {
         "password": &test_app.test_admin.password,
     });
 
-    let response = test_app.post_change_email(&change_email_body).await;
+    let response = test_app
+        .post_request(&change_email_body, "/profile/change_email")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -87,7 +89,7 @@ async fn redirect_to_index_and_logout_if_wrong_password() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let new_email: String = SafeEmail().fake();
@@ -97,7 +99,9 @@ async fn redirect_to_index_and_logout_if_wrong_password() {
         "password": "random-password"
     });
 
-    let response = test_app.post_change_email(&change_email_body).await;
+    let response = test_app
+        .post_request(&change_email_body, "/profile/change_email")
+        .await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -117,7 +121,7 @@ async fn change_email_doesn_t_allow_you_to_change_if_already_existing_email() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password,
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let change_email_body = serde_json::json!({
@@ -125,7 +129,9 @@ async fn change_email_doesn_t_allow_you_to_change_if_already_existing_email() {
         "password": &test_app.test_admin.password,
     });
 
-    let response = test_app.post_change_email(&change_email_body).await;
+    let response = test_app
+        .post_request(&change_email_body, "/profile/change_email")
+        .await;
     assert_redirects_to(&response, "/profile/change_email");
 
     let response = test_app

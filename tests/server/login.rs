@@ -8,7 +8,7 @@ async fn redirect_to_index_if_login_success() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/");
 
     let response = test_app
@@ -30,7 +30,7 @@ async fn redirect_to_login_if_login_unsuccessfull() {
         "username": "random-username",
         "password": "random-password"
     });
-    let response = test_app.post_login(&login_body).await;
+    let response = test_app.post_request(&login_body, "/auth/login").await;
     assert_redirects_to(&response, "/auth/login");
     let response = test_app
         .get_request("/")
@@ -50,7 +50,7 @@ async fn redirect_to_index_if_already_logged_in() {
         "username": &test_app.test_admin.username,
         "password": &test_app.test_admin.password
     });
-    let _ = test_app.post_login(&login_body).await;
+    let _ = test_app.post_request(&login_body, "/auth/login").await;
     let response = test_app
         .get_request("/auth/login")
         .await
