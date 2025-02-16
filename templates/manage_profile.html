@@ -8,7 +8,6 @@
     <p>Here you can change your info.</p>
 </header>
 <div class="index-form">
-    <!-- TODO: all -->
     <form action="/profile/change_username" method="get" accept-charset="utf-8">
         <p>Username: {{ current_user.username }}</p>
         <button>Change</button>
@@ -20,6 +19,10 @@
     <form action="/profile/change_email" method="get" accept-charset="utf-8">
         <p>Email: {{ current_user.email }}</p>
         <button>Change</button>
+    </form>
+    <form action="/profile/delete_account" method="get" accept-charset="utf-8">
+        <p>Delete your account</p>
+        <button class="delete">Delete</button>
     </form>
     {#
     <form action="{{ url_for('profile.change_city') }}" method="get" accept-charset="utf-8">
@@ -45,10 +48,6 @@
         <button>Activate</button>
     </form>
     {% endif %}
-    <form action="{{ url_for('profile.delete_account') }}" method="get" accept-charset="utf-8">
-        <p>Delete your account</p>
-        <button class="delete">Delete</button>
-    </form>
     #}
 </div>
 <br></br>

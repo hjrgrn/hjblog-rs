@@ -11,8 +11,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
-pub struct ChangeUsernameData {
-    username: String,
+pub struct DeleteAccountData {
     password: SecretString,
 }
 
@@ -31,17 +30,17 @@ use crate::{
 ///
 /// Response to post "/profile/change_username"
 #[tracing::instrument(
-    name = "Change Username",
+    name = "Delete Account",
     skip(form, pool, session),
     fields(
-        old_username=tracing::field::Empty,
-        new_username=tracing::field::Empty,
+        user_id=tracing::field::Empty,
+        username=tracing::field::Empty,
     )
 )]
-pub async fn change_username_post(
+pub async fn delete_account_post(
     session: TypedSession,
     pool: Data<PgPool>,
-    form: Form<ChangeUsernameData>,
+    form: Form<DeleteAccountData>,
 ) -> Result<HttpResponse, InternalError<anyhow::Error>> {
     let current_user = match session.get_current_user(&pool).await {
         Ok(opt) => {
@@ -60,30 +59,21 @@ pub async fn change_username_post(
             return Err(e500(e.into()).await);
         }
     };
-    let (new_username, password, old_username) =
-        match get_infos_for_username(&form.0, &current_user) {
-            Ok(t) => t,
-            Err(e) => {
-                FlashMessage::warning(&format!("{}", e)).send();
-                return Ok(HttpResponse::SeeOther()
-                    .insert_header((LOCATION, "/profile/change_username"))
-                    .finish());
-            }
-        };
 
-    tracing::Span::current().record(
-        "old_username",
-        &tracing::field::display(old_username.as_ref()),
-    );
-    tracing::Span::current().record(
-        "new_username",
-        &tracing::field::display(new_username.as_ref()),
-    );
+    tracing::Span::current().record("username", &tracing::field::display(&current_user.username));
+    tracing::Span::current().record("user_id", &tracing::field::display(&current_user.id));
 
-    let credentials = BasicCredentials {
-        username: old_username,
-        password,
+    let (password, username) = match get_infos_for_delete_account(&form, &current_user) {
+        Ok(t) => t,
+        Err(e) => {
+            FlashMessage::warning(&format!("{}", e)).send();
+            return Ok(HttpResponse::SeeOther()
+                .insert_header((LOCATION, "/profile/change_username"))
+                .finish());
+        }
     };
+
+    let credentials = BasicCredentials { username, password };
 
     match validate_basic_credentials(credentials, &pool).await {
         Ok(_) => {}
@@ -103,24 +93,22 @@ pub async fn change_username_post(
             };
         }
     }
-    match update_name(&pool, new_username.as_ref(), &current_user.id).await {
+
+    match delete_account(&pool, &current_user.id).await {
         Ok(()) => {
-            FlashMessage::info(format!(
-                "Your username has been updated to {}",
-                new_username.as_ref()
-            ))
-            .send();
+            session.logout();
             Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/"))
                 .finish())
         }
         Err(e) => match e {
             UpdateProfileError::InvalidValue(err) => {
+                // NOTE: This should not happen
                 FlashMessage::warning(&format!("{}", err)).send();
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()
-                        .insert_header((LOCATION, "/profile/change_username"))
+                        .insert_header((LOCATION, "/profile/delete_account"))
                         .finish(),
                 ));
             }
@@ -131,52 +119,35 @@ pub async fn change_username_post(
     }
 }
 
-/// `update_name`
+/// `delete_account`
 ///
-/// `change_username`'s helper, updates the database with the new username.
-async fn update_name(
-    pool: &PgPool,
-    username: &str,
-    user_id: &Uuid,
-) -> Result<(), UpdateProfileError> {
-    let res = sqlx::query("SELECT id FROM users WHERE username = $1")
-        .bind(username)
-        .fetch_optional(pool)
+/// `delete_account_post`'s helper, updates the database with the new username.
+async fn delete_account(pool: &PgPool, user_id: &Uuid) -> Result<(), UpdateProfileError> {
+    let res = sqlx::query("DELETE FROM users WHERE (id = $1)")
+        .bind(user_id)
+        .execute(pool)
         .await;
+
     match res {
-        Ok(opt) => match opt {
-            Some(_) => {
-                return Err(anyhow::anyhow!(
-                    "The new name you provided is already taken, please try again."
-                )
-                .into());
-            }
-            None => {}
-        },
+        Ok(_) => {}
         Err(e) => {
             return Err(e.into());
         }
     }
-    sqlx::query("UPDATE users SET username = $1 WHERE (id = $2)")
-        .bind(username)
-        .bind(user_id)
-        .execute(pool)
-        .await?;
     Ok(())
 }
 
-/// `get_infos_for_username`
+/// `get_infos_for_delete_account`
 ///
-/// `change_email_post`'s helper function that simplifies the code
+/// `delete_account_post`'s helper function that simplifies the code
 /// in exchange for a small amount of resources.
-/// Returns new_username, password and old_username in this order, or an error.
-fn get_infos_for_username(
-    form: &ChangeUsernameData,
+/// Returns password and username in this order, or an error.
+fn get_infos_for_delete_account(
+    form: &DeleteAccountData,
     current_user: &CurrentUser,
-) -> Result<(ValidUserName, ValidPassword, ValidUserName), anyhow::Error> {
-    let new_username = ValidUserName::parse(&form.username)?;
+) -> Result<(ValidPassword, ValidUserName), anyhow::Error> {
     let password = ValidPassword::parse(&form.password)?;
-    let old_username = ValidUserName::parse(&current_user.username)?;
+    let username = ValidUserName::parse(&current_user.username)?;
 
-    Ok((new_username, password, old_username))
+    Ok((password, username))
 }
