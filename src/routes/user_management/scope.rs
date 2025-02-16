@@ -4,6 +4,7 @@ use super::{
     change_email::{get::change_email_get, post::change_email_post},
     change_password::{get::change_password_get, post::change_password_post},
     change_username::{get::change_username_get, post::change_username_post},
+    delete_account::{get::delete_account_get, post::delete_account_post},
     manage_profile::manage_profile,
 };
 
@@ -16,4 +17,6 @@ pub fn user_management_scope() -> Scope {
         .route("/change_password", web::post().to(change_password_post))
         .route("/change_email", web::get().to(change_email_get))
         .route("/change_email", web::post().to(change_email_post))
+        .route("/delete_account", web::get().to(delete_account_get))
+        .route("/delete_account", web::post().to(delete_account_post))
 }
