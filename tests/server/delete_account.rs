@@ -23,6 +23,37 @@ async fn delete_account_redirects_you_to_login_if_not_logged_in() {
 }
 
 #[tokio::test]
+async fn delete_account_redirects_to_index_and_logout_if_wrong_password() {
+    let test_app = spawn_app().await;
+
+    let login_body = serde_json::json!({
+        "username": &test_app.test_admin.username,
+        "password": &test_app.test_admin.password,
+    });
+    let response = test_app.post_request(&login_body, "/auth/login").await;
+    assert_redirects_to(&response, "/");
+
+    let delete_account_body = serde_json::json!({
+        "password": "random-password",
+    });
+
+    let response = test_app
+        .post_request(&delete_account_body, "/profile/delete_account")
+        .await;
+    assert_redirects_to(&response, "/");
+
+    let response = test_app
+        .get_request("/")
+        .await
+        .expect("Failed to request route \"/\".");
+    let body = response.text().await.unwrap();
+
+    assert!(body.contains("Invalid credentials, you have been logged out."));
+    assert!(body.contains(r#"<div class="alert-danger alert-generic">"#));
+    assert!(body.contains(r#"<a href="/auth/login" class="link">Log In</a>"#));
+}
+
+#[tokio::test]
 async fn delete_account_redirect_to_index_if_successfull() {
     let test_app = spawn_app().await;
 

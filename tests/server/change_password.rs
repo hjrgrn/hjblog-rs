@@ -71,6 +71,7 @@ async fn change_password_logs_you_out_if_wrong_old_password() {
         .await
         .expect("Failed to request route \"/\".");
     let body = response.text().await.unwrap();
+    assert!(body.contains("Invalid credentials, you have been logged out."));
     assert!(!body.contains(&format!(
         r#"<a href="/profile/manage_profile" class="link">{}</a>"#,
         &test_app.test_admin.username

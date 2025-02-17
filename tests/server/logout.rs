@@ -52,6 +52,8 @@ async fn redirects_you_to_index_if_logout_is_successfull() {
         .expect("Failed to request route \"/index\".");
     let body = response.text().await.unwrap();
 
+    assert!(body.contains("See you space cowboy..."));
+    assert!(body.contains(r#"<div class="alert-success alert-generic">"#));
     assert!(body.contains(r#"class="link">Register</a>"#));
     assert!(body.contains(r#"<a href="/auth/login" class="link">Log In</a>"#));
 }

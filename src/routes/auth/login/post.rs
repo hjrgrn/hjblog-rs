@@ -10,9 +10,14 @@ use secrecy::SecretString;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::{domain::{ValidPassword, ValidUserName}, routes::errors::e500, session_state::TypedSession};
-
-use super::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials};
+use crate::{
+    domain::{ValidPassword, ValidUserName},
+    routes::{
+        auth::auxiliaries::{validate_basic_credentials, AuthError, BasicCredentials},
+        errors::e500,
+    },
+    session_state::TypedSession,
+};
 
 #[derive(Deserialize)]
 pub struct LoginFormData {
@@ -71,10 +76,7 @@ pub async fn login_post(
         }
     };
 
-    let credentials = BasicCredentials {
-        username,
-        password,
-    };
+    let credentials = BasicCredentials { username, password };
 
     tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
 
