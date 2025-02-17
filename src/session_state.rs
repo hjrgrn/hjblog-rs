@@ -28,7 +28,7 @@ impl TypedSession {
     }
 
     pub fn logout(&self) {
-        self.0.purge();
+        self.0.remove(Self::USER_ID_KEY);
     }
 
     /// # `get_current_user`

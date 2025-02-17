@@ -1,8 +1,9 @@
 use actix_web::{web, Scope};
 
 use super::{
-    get_login::login_get, get_register::register_get, logout::logout, post_login::login_post,
-    post_register::register_post,
+    login::{get::login_get, post::login_post},
+    logout::logout,
+    register::{get::register_get, post::register_post},
 };
 
 pub fn auth_scope() -> Scope {

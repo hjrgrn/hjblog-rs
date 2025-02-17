@@ -97,6 +97,7 @@ pub async fn delete_account_post(
     match delete_account(&pool, &current_user.id).await {
         Ok(()) => {
             session.logout();
+            FlashMessage::info("Your account has been deleted correctly.\nSee you space cowboy...").send();
             Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/"))
                 .finish())

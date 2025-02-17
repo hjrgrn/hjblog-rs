@@ -1,18 +1,16 @@
 use crate::{
-    routes::{
-        auxiliaries::{get_flash_messages, FormattedFlashMessage},
-        errors::e500,
-        CurrentUser,
-    },
+    routes::{auxiliaries::FormattedFlashMessage, CurrentUser},
     session_state::TypedSession,
 };
-use actix_web::{http::header::LOCATION, web::Data, HttpResponse, Responder};
-use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages};
+use actix_web::{web::Data, Responder};
+use actix_web_flash_messages::IncomingFlashMessages;
 use askama_actix::Template;
 use sqlx::PgPool;
 
+use super::auxiliaries::{user_management_get_requests, Mode};
+
 #[derive(Template)]
-#[template(path = "manage_profile.html")]
+#[template(path = "profile/manage_profile.html")]
 pub struct ManageProfileTemplate {
     pub title: Option<String>,
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
@@ -24,35 +22,5 @@ pub async fn manage_profile(
     session: TypedSession,
     pool: Data<PgPool>,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {
-    let flash_messages = get_flash_messages(&messages);
-    let current_user = match session.get_current_user(&pool).await {
-        Ok(opt) => {
-            match opt {
-                Some(cu) => cu,
-                None => {
-                    FlashMessage::warning("You are already not logged in, you need to be logged in to view this page.")
-                        .send();
-                    return Ok(HttpResponse::SeeOther()
-                        .insert_header((LOCATION, "/auth/login"))
-                        .finish());
-                }
-            }
-        }
-        Err(e) => {
-            return Err(e500(e.into()).await);
-        }
-    };
-
-    let ctx = ManageProfileTemplate {
-        title: Some(format!("Manage your profile {}", current_user.username).into()),
-        flash_messages,
-        current_user,
-    };
-    let body = match ctx.render() {
-        Ok(c) => c,
-        Err(e) => {
-            return Err(e500(e.into()).await);
-        }
-    };
-    Ok(HttpResponse::Ok().body(body))
+    user_management_get_requests(&messages, &session, &pool, Mode::ManageProfile).await
 }

@@ -11,16 +11,16 @@ use crate::{
 };
 
 #[derive(Template)]
-#[template(path = "login.html")]
-pub struct LoginTemplate {
+#[template(path = "auth/register.html")]
+pub struct RegisterTemplate {
     pub title: Option<String>,
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
-/// # `login_get`
+/// # `register_get`
 ///
-/// Response to get "/auth/login"
-pub async fn login_get(
+/// Response to get "/auth/register"
+pub async fn register_get(
     session: TypedSession,
     messages: IncomingFlashMessages,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {
@@ -34,7 +34,7 @@ pub async fn login_get(
     };
     match user_id {
         Some(_) => {
-            FlashMessage::warning("You are already logged in, before logging in again logout.")
+            FlashMessage::warning("You are already registered, before register again logout.")
                 .send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/"))
@@ -43,8 +43,8 @@ pub async fn login_get(
         None => {}
     }
 
-    let ctx = LoginTemplate {
-        title: Some("Sign In".into()),
+    let ctx = RegisterTemplate {
+        title: Some("Register".into()),
         flash_messages,
     };
     let body = match ctx.render() {

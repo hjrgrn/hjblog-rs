@@ -9,9 +9,13 @@ use secrecy::SecretString;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::{routes::errors::e500, session_state::TypedSession};
-
-use super::auxiliaries::{register_user, RegisterCredentials, RegisterError};
+use crate::{
+    routes::{
+        auth::auxiliaries::{register_user, RegisterCredentials, RegisterError},
+        errors::e500,
+    },
+    session_state::TypedSession,
+};
 
 #[derive(Deserialize)]
 pub struct LoginFormData {

@@ -113,6 +113,8 @@ async fn change_username_redirects_to_index_and_logout_if_wrong_password() {
         .expect("Failed to request route \"/\".");
     let body = response.text().await.unwrap();
 
+    assert!(body.contains("Invalid credentials, you have been logged out."));
+    assert!(body.contains(r#"<div class="alert-danger alert-generic">"#));
     assert!(body.contains(r#"<a href="/auth/login" class="link">Log In</a>"#));
 }
 
