@@ -1,20 +1,21 @@
 use actix_web::{error::InternalError, web};
 use actix_web_flash_messages::IncomingFlashMessages;
 use askama_actix::Template;
-use chrono::{DateTime, Local};
-use serde::Deserialize;
 use sqlx::{query_as, PgPool};
 
-use crate::session_state::TypedSession;
-
-use super::{
-    auxiliaries::{get_flash_messages, FormattedFlashMessage},
-    errors::e500,
-    CurrentUser,
+use crate::{
+    routes::{
+        auxiliaries::{get_flash_messages, FormattedFlashMessage},
+        errors::e500,
+        CurrentUser,
+    },
+    session_state::TypedSession,
 };
 
+use super::auxiliaries::Post;
+
 #[derive(Template)]
-#[template(path = "index.html")]
+#[template(path = "home/index.html")]
 pub struct IndexTemplate {
     pub title: Option<String>,
     pub current_user: Option<CurrentUser>,
@@ -22,17 +23,8 @@ pub struct IndexTemplate {
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
 }
 
-#[derive(Deserialize, sqlx::FromRow)]
-#[allow(dead_code)]
-pub struct Post {
-    username: String,
-    title: String,
-    content: String,
-    posted: DateTime<Local>,
-}
-
 /// TODO: comment
-pub async fn index(
+pub async fn index_get(
     pool: web::Data<PgPool>,
     session: TypedSession,
     messages: IncomingFlashMessages,
@@ -71,5 +63,5 @@ pub async fn index(
     skip(pool)
 )]
 async fn get_posts(pool: &PgPool) -> Result<Vec<Post>, sqlx::Error> {
-    query_as::<_, Post>("SELECT users.username, posts.title, posts.content, posts.posted FROM posts JOIN users ON (users.id = posts.author_id) ORDER BY posts.posted DESC, posts.id DESC LIMIT 7").fetch_all(pool).await
+    query_as::<_, Post>("SELECT posts.id, users.username, posts.title, posts.content, posts.posted FROM posts JOIN users ON (users.id = posts.author_id) ORDER BY posts.posted DESC, posts.id DESC LIMIT 7").fetch_all(pool).await
 }

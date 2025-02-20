@@ -68,7 +68,7 @@ async fn get_username(
     std::io::stdout().flush()?;
     let mut username = String::new();
     stdin.read_line(&mut username)?;
-    let username = ValidUserName::parse(&username)?;
+    let username = ValidUserName::parse(username.trim())?;
 
     match query("SELECT id FROM users WHERE (username = $1)")
         .bind(username.as_ref())
@@ -97,7 +97,7 @@ async fn get_email(
     std::io::stdout().flush()?;
     let mut email = String::new();
     stdin.read_line(&mut email)?;
-    let email = ValidEmail::parse(&email)?;
+    let email = ValidEmail::parse(email.trim())?;
 
     match query("SELECT id FROM users WHERE (email = $1)")
         .bind(email.as_ref())
@@ -150,7 +150,7 @@ fn get_hash_pass() -> Result<String, anyhow::Error> {
     disable_raw_mode()?;
     println!("");
 
-    let password = ValidPassword::parse(&SecretString::new(format!("{}", password).into()))?;
+    let password = ValidPassword::parse(&SecretString::new(format!("{}", password.trim()).into()))?;
 
     let salt = SaltString::generate(OsRng);
     Ok(Argon2::default()

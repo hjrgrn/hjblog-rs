@@ -13,7 +13,6 @@ use tokio::{select, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
-#[allow(dead_code)]
 pub struct TestApp {
     pub address: String,
     pub port: u16,
@@ -142,20 +141,20 @@ pub async fn spawn_app() -> TestApp {
             .take(48)
             .collect();
         // Find an avaible non priviledged port
-        c.application.port = 0;
+        c.server.port = 0;
         c
     };
 
     // Create and migrate the test database
     let db_pool = configure_database(&config.database).await;
 
-    let listener = TcpListener::bind(&config.application.get_full_address())
-        .expect("Failed to bind TcpListener");
+    let listener =
+        TcpListener::bind(&config.server.get_full_address()).expect("Failed to bind TcpListener");
     let port = listener
         .local_addr()
         .expect("Failed to obtain local address from TcpListener.")
         .port();
-    let address = config.application.host.clone();
+    let address = config.server.host.clone();
     let token = CancellationToken::new();
     let handle = tokio::spawn(switch(listener, token.clone(), config));
     let api_client = reqwest::Client::builder()
@@ -242,8 +241,8 @@ async fn switch(listener: TcpListener, token: CancellationToken, config: Setting
         _ = run(
             listener,
             connection_to_db.clone(),
-            config.application.hmac_secret,
-            config.application.cookie_secure,
+            config.server.hmac_secret,
+            config.server.cookie_secure,
         ).expect("Failed to spawn test instance.") => {}
     }
 }

@@ -97,7 +97,8 @@ pub async fn delete_account_post(
     match delete_account(&pool, &current_user.id).await {
         Ok(()) => {
             session.logout();
-            FlashMessage::info("Your account has been deleted correctly.\nSee you space cowboy...").send();
+            FlashMessage::info("Your account has been deleted correctly.\nSee you space cowboy...")
+                .send();
             Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/"))
                 .finish())
@@ -124,17 +125,11 @@ pub async fn delete_account_post(
 ///
 /// `delete_account_post`'s helper, updates the database with the new username.
 async fn delete_account(pool: &PgPool, user_id: &Uuid) -> Result<(), UpdateProfileError> {
-    let res = sqlx::query("DELETE FROM users WHERE (id = $1)")
+    sqlx::query("DELETE FROM users WHERE (id = $1)")
         .bind(user_id)
         .execute(pool)
-        .await;
-
-    match res {
-        Ok(_) => {}
-        Err(e) => {
-            return Err(e.into());
-        }
-    }
+        .await
+        .map_err(|e| UpdateProfileError::UnexpectedError(e))?;
     Ok(())
 }
 
