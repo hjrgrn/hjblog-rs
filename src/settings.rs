@@ -6,8 +6,9 @@ use sqlx::ConnectOptions;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct Settings {
-    pub application: ApplicationSettings,
+    pub server: ServerSettings,
     pub database: DatabaseSettings,
+    pub blog: BlogSettings,
 }
 
 #[derive(Clone, Deserialize, Debug)]
@@ -73,7 +74,7 @@ impl DatabaseSettings {
 }
 
 #[derive(Clone, Deserialize, Debug)]
-pub struct ApplicationSettings {
+pub struct ServerSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
@@ -81,10 +82,19 @@ pub struct ApplicationSettings {
     pub cookie_secure: bool,
 }
 
-impl ApplicationSettings {
+impl ServerSettings {
     pub fn get_full_address(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BlogSettings {
+    /// Amount of posts that will be displayed per page
+    pub max_per_page: u8,
+    /// Number used to calculate the page indexes that will be
+    /// displayed on the pages
+    pub page_span: u8,
 }
 
 /// The possible runtime environment

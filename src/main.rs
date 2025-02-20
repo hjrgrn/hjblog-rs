@@ -17,12 +17,12 @@ async fn main() -> io::Result<()> {
         .acquire_timeout(std::time::Duration::from_secs(2))
         .connect_lazy_with(config.database.with_db());
 
-    let listener = TcpListener::bind(&config.application.get_full_address())?;
+    let listener = TcpListener::bind(&config.server.get_full_address())?;
     run(
         listener,
         connection_pool,
-        config.application.hmac_secret,
-        config.application.cookie_secure,
+        config.server.hmac_secret,
+        config.server.cookie_secure,
     )?
     .await
 }

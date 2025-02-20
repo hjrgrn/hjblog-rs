@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="post_wrapper">
+        {% if pagination.max_page > 0 %}
+            {% match posts %}
+                {% when Some(posts) %}
+                    {% for post in posts.iter() %}
+                        <div class="post_container">
+                            <p class="post_card_ids"><a href="#" class="post_card_author">{{ post.username }}</a>   {{ post.posted }}</p>
+                            <hr>
+                            <h3><a class="post_card_h3_link" href="{{ post.get_path() }}">{{ post.title }}</a></h3><br></br>
+                            <h3><a class="post_card_h3_link" href="#">{{ post.title }}</a></h3><br></br>
+                            <p>{{ post.content }}</p>
+                            <p>{{ post.posted }}</p>
+                        </div>
+                    {% endfor %}
+                {% when None %}
+                    <div class="post_container">
+                        <h3 class="post_card_h3_error">No more posts are avaible.</h3>
+                    </div>
+            {% endmatch %}
+
+
+            <div class="pagination">
+                {% if pagination.prev_page > 0 %}
+                ...
+                {% endif %}
+                {% if pagination.current_page == 0 %}
+                    {% if pagination.o > 0 %}
+                        <a class="page_num page_offset" href="{{ pagination.get_previous_posts_link() }}">Previous posts</a>
+                    {% endif %}
+                {% endif %}
+
+                {% for page in 0..pagination.max_page + 1 %}
+                    {% if page >= pagination.prev_page %}
+                        {% if page < pagination.current_page %}
+                            <a class="page_num" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                        {% endif %}
+                    {% endif %}
+                    {% if page == pagination.current_page %}
+                        <a class="page_num page_num_main" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                    {% endif %}
+                    {% if page > pagination.current_page %}
+                        {% if page <= pagination.next_page %}
+                            <a class="page_num" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.next_page < pagination.max_page %}
+                ...
+                {% endif %}
+
+                {% if pagination.current_page == pagination.max_page %}
+                    {% if pagination.more_posts %}
+                        <a class= "page_num page_offset" href="{{ pagination.get_next_posts_link() }}">More posts</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="post_container">
+                <h3 class="post_card_h3_error">Currently there are no posts to be displayed, please try again later.</h3>
+            </div>
+        {% endif %}
+    </div>
+{% endblock body %}

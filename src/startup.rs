@@ -7,7 +7,11 @@ use secrecy::{ExposeSecret, SecretString};
 use sqlx::{Pool, Postgres};
 use std::{io, net::TcpListener};
 
-use crate::routes::{auth_scope, error_404, health_check, index, user_management_scope};
+use crate::routes::{
+    auth_scope, error_404, health_check,
+    home::{blog::blog_get, index::index_get},
+    user_management_scope,
+};
 
 pub fn run(
     listener: TcpListener,
@@ -30,9 +34,10 @@ pub fn run(
                     .build(),
             )
             .route("/health_check", web::get().to(health_check))
-            .route("/", web::get().to(index))
-            .route("/home", web::get().to(index))
-            .route("/index", web::get().to(index))
+            .route("/", web::get().to(index_get))
+            .route("/home", web::get().to(index_get))
+            .route("/index", web::get().to(index_get))
+            .route("/blog", web::get().to(blog_get))
             .service(auth_scope())
             .service(user_management_scope())
             .service(actix_files::Files::new("/static/css", "./static/css"))
