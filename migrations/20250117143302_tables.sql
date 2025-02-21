@@ -43,3 +43,5 @@ CREATE TABLE comments (
     FOREIGN KEY (author_id) REFERENCES users (id),
     FOREIGN KEY (post_id) REFERENCES posts (id)
 );
+
+CREATE INDEX post_time_index ON posts (posted DESC);

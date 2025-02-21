@@ -62,10 +62,10 @@ pub async fn error_400() -> HttpResponse {
     ) {
         Ok(b) => b,
         Err(_) => {
-            return HttpResponse::InternalServerError().finish();
+            return HttpResponse::BadRequest().finish();
         }
     };
-    HttpResponse::InternalServerError().body(body)
+    HttpResponse::BadRequest().body(body)
 }
 
 /// TODO: comment

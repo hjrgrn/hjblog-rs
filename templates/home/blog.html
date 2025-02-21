@@ -10,7 +10,6 @@
                             <p class="post_card_ids"><a href="#" class="post_card_author">{{ post.username }}</a>   {{ post.posted }}</p>
                             <hr>
                             <h3><a class="post_card_h3_link" href="{{ post.get_path() }}">{{ post.title }}</a></h3><br></br>
-                            <h3><a class="post_card_h3_link" href="#">{{ post.title }}</a></h3><br></br>
                             <p>{{ post.content }}</p>
                             <p>{{ post.posted }}</p>
                         </div>
@@ -28,7 +27,7 @@
                 {% endif %}
                 {% if pagination.current_page == 0 %}
                     {% if pagination.o > 0 %}
-                        <a class="page_num page_offset" href="{{ pagination.get_previous_posts_link() }}">Previous posts</a>
+                        <a class="page_num page_offset" href="{{ pagination.get_previous_page_link() }}">Previous posts</a>
                     {% endif %}
                 {% endif %}
 
@@ -39,7 +38,7 @@
                         {% endif %}
                     {% endif %}
                     {% if page == pagination.current_page %}
-                        <a class="page_num page_num_main" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                        <span class="page_num page_num_main">{{ page }}</span>
                     {% endif %}
                     {% if page > pagination.current_page %}
                         {% if page <= pagination.next_page %}
@@ -54,7 +53,7 @@
 
                 {% if pagination.current_page == pagination.max_page %}
                     {% if pagination.more_posts %}
-                        <a class= "page_num page_offset" href="{{ pagination.get_next_posts_link() }}">More posts</a>
+                        <a class= "page_num page_offset" href="{{ pagination.get_next_page_link() }}">More posts</a>
                     {% endif %}
                 {% endif %}
             </div>
