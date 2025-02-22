@@ -29,6 +29,7 @@ pub struct LoginFormData {
 ///
 /// Response to post "/auth/login"
 #[tracing::instrument(
+    name = "Login user post"
     skip(form, pool, session),
     fields(
         username=tracing::field::Empty,

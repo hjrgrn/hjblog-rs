@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block body %}
+<header class="auth_header">
+    <h1>New Post</h1>
+</header>
+<div class="upload_form">
+    <form method="post" accept-charset="utf-8">
+        <fieldset>
+            <label>
+                <p>Title</p>
+                <input autofocus="true" id="title" maxlength="60" minlength="3" name="title" placeholder="Title" required="" type="text" value="">
+            </label>
+            <label>
+                <p>Content</p>
+                <textarea class="upload_form_content" id="content" maxlength="2000" minlength="3" name="content" placeholder="Content" required=""></textarea>
+            </label>
+            <label>
+                <input class="bottone_auth" id="submit" name="submit" type="submit" value="Submit">
+            </label>
+        </fieldset>
+    </form>
+</div>
+<br></br>
+<div class="upload_form">
+    <p><a href="/" class="auth_link">Go back to homepage.</a></p>
+</div>
+{% endblock body %}

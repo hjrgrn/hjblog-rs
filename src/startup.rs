@@ -10,6 +10,7 @@ use std::{io, net::TcpListener};
 use crate::routes::{
     auth_scope, error_404, health_check,
     home::{blog::blog_get, index::index_get},
+    user_actions::scope::user_actions_scope,
     user_management_scope,
 };
 
@@ -40,6 +41,7 @@ pub fn run(
             .route("/blog", web::get().to(blog_get))
             .service(auth_scope())
             .service(user_management_scope())
+            .service(user_actions_scope())
             .service(actix_files::Files::new("/static/css", "./static/css"))
             .service(actix_files::Files::new(
                 "/static/scripts",

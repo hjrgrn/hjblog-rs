@@ -68,6 +68,23 @@ pub async fn error_400() -> HttpResponse {
     HttpResponse::BadRequest().body(body)
 }
 
+/// # `error_403`
+///
+/// Handler that returns a 403 code with a custom HTML doc.
+pub async fn error_403() -> HttpResponse {
+    let body = match generate_error_template(
+        "403: Forbidden",
+        "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server.",
+        403,
+    ) {
+        Ok(b) => b,
+        Err(_) => {
+            return HttpResponse::Forbidden().finish();
+        }
+    };
+    HttpResponse::Forbidden().body(body)
+}
+
 /// TODO: comment
 #[tracing::instrument(name = "Generate error template", skip(h1, p))]
 fn generate_error_template(
@@ -101,4 +118,12 @@ where
     T: std::fmt::Debug + std::fmt::Display + 'static,
 {
     actix_web::error::InternalError::from_response(e, error_400().await)
+}
+
+/// TODO: comment
+pub async fn e403<T>(e: T) -> actix_web::error::InternalError<T>
+where
+    T: std::fmt::Debug + std::fmt::Display + 'static,
+{
+    actix_web::error::InternalError::from_response(e, error_403().await)
 }
