@@ -10,4 +10,5 @@ mod index;
 mod login;
 mod logout;
 mod manage_profile;
+mod new_post;
 mod register;

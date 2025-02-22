@@ -4,6 +4,7 @@ pub mod home;
 pub mod auth;
 pub mod auxiliaries;
 pub mod user_management;
+pub mod user_actions;
 
 pub use health_check::health_check;
 pub use errors::error_404;
