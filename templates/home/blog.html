@@ -2,7 +2,6 @@
 
 {% block body %}
     <div class="post_wrapper">
-        {% if pagination.max_page > 0 %}
             {% match posts %}
                 {% when Some(posts) %}
                     {% for post in posts.iter() %}
@@ -16,7 +15,7 @@
                     {% endfor %}
                 {% when None %}
                     <div class="post_container">
-                        <h3 class="post_card_h3_error">No more posts are avaible.</h3>
+                        <h3 class="post_card_h3_error">Currently there are no posts to be displayed, please try again later.</h3>
                     </div>
             {% endmatch %}
 
@@ -57,10 +56,5 @@
                     {% endif %}
                 {% endif %}
             </div>
-        {% else %}
-            <div class="post_container">
-                <h3 class="post_card_h3_error">Currently there are no posts to be displayed, please try again later.</h3>
-            </div>
-        {% endif %}
     </div>
 {% endblock body %}

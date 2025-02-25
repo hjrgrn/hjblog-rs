@@ -1,2 +1,3 @@
 pub mod scope;
-pub mod new_post;
+mod new_post;
+mod visit_post;

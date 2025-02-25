@@ -43,12 +43,14 @@ sudo apt install postgresql-client-16
 cargo install cargo-audit --locked
 ```
 
-- [Bunyan Formatter](https://crates.io/crates/bunyan): a Rust port of (a subset of) the original [NodeJS bunyan CLI](https://github.com/trentm/node-bunyan).
+- [bunyan-rs](https://github.com/hjrgrn/bunyan-rs): a Rust port of (a subset of) the original [NodeJS bunyan CLI](https://github.com/trentm/node-bunyan).
 
 Install:
 
 ```bash
-cargo install bunyan
+git clone 'https://github.com/hjrgrn/bunyan-rs'
+cd ./bunyan-rs
+cargo install --path .
 ```
 
 Usage:

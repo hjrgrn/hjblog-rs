@@ -63,5 +63,15 @@ pub async fn index_get(
     skip(pool)
 )]
 async fn get_posts(pool: &PgPool) -> Result<Vec<Post>, sqlx::Error> {
-    query_as::<_, Post>("SELECT posts.id, users.username, posts.title, posts.content, posts.posted FROM posts JOIN users ON (users.id = posts.author_id) ORDER BY posts.posted DESC, posts.id DESC LIMIT 7").fetch_all(pool).await
+    query_as::<_, Post>(
+        "SELECT \
+            posts.id, \
+            users.username, \
+            posts.title, \
+            posts.content, \
+            posts.posted, \
+            posts.author_id \
+        FROM posts JOIN users ON (users.id = posts.author_id) \
+        ORDER BY posts.posted DESC, posts.id DESC LIMIT 7"
+    ).fetch_all(pool).await
 }

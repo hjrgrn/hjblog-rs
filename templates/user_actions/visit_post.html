@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="visit_post_container">
+        <!-- TODO: admin/user profile page -->
+        <p class="visit_post_date">{{ post.posted.format("%d-%m-%Y") }} <a href="#" class="visit_post_author">{{ post.username }}</a></p>
+        <h1 class="visit_post_h1">{{ post.title }}</h1>
+        <p>{{ post.content }}</p>
+        {% match current_user %}
+            {% when Some with (cu) %}
+                <!-- TODO: delete post -->
+                {% if identified %}
+                    <br></br>
+                    <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>
+                    <br></br>
+                    {% include "./includes/modal_delete_post.html" %}
+                {% endif %}
+                <!-- TODO: comment post -->
+                <a class="visit_post_delete_post" href="#">Comment</a>
+            {% when None %}
+        {% endmatch %}
+        <br></br>
+        <div class="visit_post_comment">
+            <h2 class="visit_post_comment_h2">Comments</h2>
+            {% if comments.len() > 0 %}
+                {% for comment in comments.iter() %}
+                    <div class="visit_post_comment_container">
+                        <p>{{ comment.content }}</p>
+                        {% match current_user %}
+                            {% when Some(cu) %}
+                                {% if cu.id == post.author_id || cu.id == comment.author_id %}
+                                    <span class="visit_post_delete_comment" onclick="modalShow('modal-delete-comment')">Delete comment</span>
+                                    {% include "./includes/modal_delete_comment.html" %}
+                                {% endif %}
+                            {% when None %}
+                        {% endmatch %}
+
+                        <span class="visit_post_comment_date">{{ comment.written.format("%d-%m-%Y") }}</span>
+                        <span class="visit_post_comment_field">author: </span><a href="#" class="visit_post_comment_link">{{ comment.username }}</a>
+                    </div>
+                {% endfor %}
+                    <div class="visit_post_comment_container">
+                        <!-- TODO: all comments -->
+                        <a class="visit_post_comment_all_posts" href="#">All comments →</a>
+                    </div>
+            {% else %}
+                <p>Nobody has commented this post yet, be the first one to do so.</p>
+            {% endif %}
+            {% match current_user %}
+                {% when Some with (_) %}
+                {% when None %}
+                    <a class="visit_post_delete_post" href="/auth/login">Login</a>
+            {% endmatch %}
+        </div>
+    </div>
+
+{% endblock body %}

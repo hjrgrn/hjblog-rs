@@ -264,9 +264,15 @@ pub async fn get_posts(
 
     Ok(
         match query_as::<_, Post>(
-            "SELECT posts.id, users.username, posts.title, posts.content, posts.posted \
-        FROM posts JOIN users ON (users.id = posts.author_id) \
-        ORDER BY posts.posted DESC, posts.id DESC LIMIT ($1) OFFSET ($2)",
+            "SELECT \
+                posts.id, \
+                users.username, \
+                posts.title, \
+                posts.content,
+                posts.posted, \
+                posts.author_id \
+            FROM posts JOIN users ON (users.id = posts.author_id) \
+            ORDER BY posts.posted DESC, posts.id DESC LIMIT ($1) OFFSET ($2)",
         )
         .bind(max_per_page as i64)
         .bind(start as i64)

@@ -1,40 +1,39 @@
 use crate::auxiliaries::spawn_app;
-use sqlx::{query, Row};
-use uuid::Uuid;
+
+#[tokio::test]
+async fn blog_displays_one_post() {
+    let test_app = spawn_app().await;
+
+    test_app.generate_posts(1).await;
+
+    let response = test_app
+        .get_request("/blog")
+        .await
+        .expect("Failed to request route \"/blog\".");
+
+    let body = response.text().await.unwrap();
+
+    assert!(body.contains(r#"<span class="page_num page_num_main">0</span>"#));
+}
 
 #[tokio::test]
 async fn blog_displays_posts_if_there_are_posts() {
     // TODO: get parameters from config
-    let mut post_num = 199;
+    let mut post_num = 200;
     let max_per_page = 5;
     let max_buffer = 99;
     let max_page = max_buffer / max_per_page;
     let page_span = 3;
-
-    let test_app = spawn_app().await;
-    let id: Uuid = query("SELECT id FROM users WHERE username = $1")
-        .bind(&test_app.test_admin.username)
-        .fetch_one(&test_app.db_pool)
-        .await
-        .unwrap()
-        .try_get("id")
-        .unwrap();
-
-    for i in 0..post_num {
-        let title = format!("test-title-{}", i);
-        let content = format!("This is a test,\nContent: {}", i);
-        let post_id = Uuid::new_v4();
-        query("INSERT INTO posts (id, title, content, author_id) VALUES ($1, $2, $3, $4)")
-            .bind(post_id)
-            .bind(&title)
-            .bind(&content)
-            .bind(id)
-            .execute(&test_app.db_pool)
-            .await
-            .unwrap();
+    let mut page_amount = post_num / max_per_page;
+    if post_num % max_per_page != 0 {
+        page_amount = page_amount + 1;
     }
 
-    for i in 0..max_page * 2 + 1 {
+    let test_app = spawn_app().await;
+
+    test_app.generate_posts(post_num as u16).await;
+
+    for i in 0..page_amount {
         let o = if i <= max_page { 0 } else { 1 };
         let index = if i <= max_page { i } else { i - max_page - 1 };
         let response = test_app
@@ -84,7 +83,7 @@ async fn blog_displays_posts_if_there_are_posts() {
         } else if i == max_page + 1 {
             assert!(body.contains(
                 r#"<a class="page_num page_offset" href="/blog?index=0&amp;o=0">Previous posts</a>"#
-            ))
+            ));
         } else {
             assert!(!body.contains(
                 r#"<a class= "page_num page_offset" href="/blog?index=0&amp;o=1">More posts</a>"#

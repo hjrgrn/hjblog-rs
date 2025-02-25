@@ -1,0 +1,19 @@
+<!-- Modal info content -->
+<div id="modal-delete-comment" class="modal">
+
+  <!-- Modal content -->
+	<div class="modal-delete-content">
+		<div>
+			<h2 class="modal-delete-h2">Continue?</h2>
+		</div>
+		<div class="modal-delete-body">
+			<p>Are you sure you want to delete your comment?</p>
+            <br></br>
+            <!-- TODO: delete comment -->
+            {#
+            <a class="visit_post_delete_post" href="{{ url_for('user.delete_comment', index=post['id'], cid=comment['id']) }}">Delete comment</a>
+            #}
+			<button class="visit_post_delete_post_abort" onclick="modalHide('modal-delete-comment')">Abort</button>
+		</div>
+	</div>
+</div>

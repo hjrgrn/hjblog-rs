@@ -56,6 +56,37 @@ impl TestApp {
             .await
             .expect(&format!("Failed to request \"{}\"", path))
     }
+
+    pub async fn generate_posts(&self, amount: u16) {
+        for i in 0..amount {
+            let title = format!("test-title-{}", i);
+            let content = format!("This is a test,\nContent: {}", i);
+            let post_id = Uuid::new_v4();
+            query("INSERT INTO posts (id, title, content, author_id) VALUES ($1, $2, $3, $4)")
+                .bind(post_id)
+                .bind(&title)
+                .bind(&content)
+                .bind(self.test_admin.user_id)
+                .execute(&self.db_pool)
+                .await
+                .unwrap();
+        }
+    }
+
+    pub async fn generate_commens_to_post(&self, post_id: Uuid, amount: u16, user_id: Uuid) {
+        for i in 0..amount {
+            let content = format!("This is a test, content: {}", i);
+            let comment_id = Uuid::new_v4();
+            query("INSERT INTO comments (id, post_id, content, author_id) VALUES ($1, $2, $3, $4)")
+                .bind(comment_id)
+                .bind(post_id)
+                .bind(&content)
+                .bind(user_id)
+                .execute(&self.db_pool)
+                .await
+                .unwrap();
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -87,7 +118,7 @@ impl TestUser {
         query(
             "INSERT INTO users (id, username, email, hash_pass, is_admin) VALUES ($1, $2, $3, $4, $5)",
         )
-        .bind(Uuid::new_v4())
+        .bind(user_id)
         .bind(&username)
         .bind(&email)
         .bind(&hash_pass)
