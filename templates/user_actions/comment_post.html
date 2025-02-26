@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="visit_post_container">
+    <p class="visit_post_date">{{ post.posted.format("%d-%m-%Y") }} <a href="#" class="visit_post_author">{{
+            post.username }}</a></p>
+    <h1 class="visit_post_h1">{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+
+    <br></br>
+    <div>
+        <p>Write your comment here:</p>
+        <form method="post" accept-charset="utf-8">
+            <textarea autofocus="" class="comment_form_content" id="content" maxlength="399" minlength="1"
+                name="content" placeholder="Comment" required=""></textarea>
+            <br></br>
+            <input class="visit_post_delete_post" id="submit" name="submit" type="submit" value="Comment">
+            <br></br>
+        </form>
+    </div>
+</div>
+
+{% endblock body %}
