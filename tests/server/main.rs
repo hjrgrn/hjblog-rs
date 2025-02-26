@@ -1,4 +1,5 @@
 mod auxiliaries;
+mod comment_post;
 mod visit_post;
 mod blog;
 mod change_email;

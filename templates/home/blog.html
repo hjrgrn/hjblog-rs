@@ -6,11 +6,11 @@
                 {% when Some(posts) %}
                     {% for post in posts.iter() %}
                         <div class="post_container">
-                            <p class="post_card_ids"><a href="#" class="post_card_author">{{ post.username }}</a>   {{ post.posted }}</p>
+                            <p class="post_card_ids"><a href="#" class="post_card_author">{{ post.username }}</a>   {{ post.posted.format("%d-%m-%Y") }}</p>
                             <hr>
                             <h3><a class="post_card_h3_link" href="{{ post.get_path() }}">{{ post.title }}</a></h3><br></br>
                             <p>{{ post.content }}</p>
-                            <p>{{ post.posted }}</p>
+                            <p>{{ post.posted.format("%d-%m-%Y") }}</p>
                         </div>
                     {% endfor %}
                 {% when None %}

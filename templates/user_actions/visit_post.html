@@ -15,8 +15,7 @@
                     <br></br>
                     {% include "./includes/modal_delete_post.html" %}
                 {% endif %}
-                <!-- TODO: comment post -->
-                <a class="visit_post_delete_post" href="#">Comment</a>
+                <a class="visit_post_delete_post" href="/user_actions/comment/{{ post.id }}">Comment</a>
             {% when None %}
         {% endmatch %}
         <br></br>
