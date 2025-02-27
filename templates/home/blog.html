@@ -51,8 +51,8 @@
                 {% endif %}
 
                 {% if pagination.current_page == pagination.max_page %}
-                    {% if pagination.more_posts %}
-                        <a class= "page_num page_offset" href="{{ pagination.get_next_page_link() }}">More posts</a>
+                    {% if pagination.more %}
+                        <a class= "page_num page_offset" href="{{ pagination.get_next_page_link() }}">More Posts</a>
                     {% endif %}
                 {% endif %}
             </div>
