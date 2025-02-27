@@ -1,12 +1,13 @@
 use actix_web::{error::InternalError, web};
 use actix_web_flash_messages::IncomingFlashMessages;
 use askama_actix::Template;
-use serde::Deserialize;
 use sqlx::{query, query_as, PgPool, Row};
 
 use crate::{
     routes::{
-        auxiliaries::{get_flash_messages, FormattedFlashMessage},
+        auxiliaries::{
+            get_flash_messages, get_indexes, FormattedFlashMessage, Pagination, PaginationData,
+        },
         errors::{e400, e500},
         CurrentUser,
     },
@@ -25,47 +26,6 @@ pub struct BlogTemplate {
     pub pagination: Pagination,
 }
 
-#[derive(Deserialize)]
-pub struct BlogGetData {
-    o: Option<u64>,
-    index: Option<u64>,
-}
-
-/// Contains all the information needed to
-/// create a correct pagination in `BlogTemplate`
-pub struct Pagination {
-    pub o: u64,
-    pub offset: u64,
-    pub current_page: u64,
-    pub prev_page: u64,
-    pub max_page: u64,
-    pub next_page: u64,
-    pub more_posts: bool,
-}
-
-impl Pagination {
-    /// Get the link for the page indicated by `index`
-    pub fn get_link(&self, index: &u64) -> String {
-        format!("/blog?index={}&o={}", index, self.o)
-    }
-    /// Get the link for the previous page
-    pub fn get_previous_page_link(&self) -> String {
-        let o = match self.o.checked_sub(1) {
-            Some(o) => o,
-            None => 0,
-        };
-        format!("/blog?index=0&o={}", o)
-    }
-    /// Get the link for the next page
-    pub fn get_next_page_link(&self) -> String {
-        let o = match self.o.checked_add(1) {
-            Some(o) => o,
-            None => u64::MAX,
-        };
-        format!("/blog?index=0&o={}", o)
-    }
-}
-
 /// `blog_get`
 ///
 /// Handler that hanldes a get request for `/blog` route.
@@ -73,7 +33,7 @@ pub async fn blog_get(
     pool: web::Data<PgPool>,
     session: TypedSession,
     messages: IncomingFlashMessages,
-    query_data: web::Query<BlogGetData>,
+    query_data: web::Query<PaginationData>,
 ) -> Result<BlogTemplate, InternalError<anyhow::Error>> {
     let flash_messages = get_flash_messages(&messages);
     let current_user = match session.get_current_user(&pool).await {
@@ -100,11 +60,12 @@ pub async fn blog_get(
         let pagination = Pagination {
             o,
             offset,
-            more_posts,
+            more: more_posts,
             current_page: 0,
             next_page: 0,
             prev_page: 0,
             max_page: 0,
+            path: String::from("/blog"),
         };
 
         return Ok(BlogTemplate {
@@ -128,11 +89,12 @@ pub async fn blog_get(
     let pagination = Pagination {
         o,
         offset,
-        more_posts,
+        more: more_posts,
         current_page,
         prev_page,
         next_page,
         max_page,
+        path: String::from("/blog"),
     };
 
     Ok(BlogTemplate {
@@ -184,51 +146,6 @@ pub async fn get_count(
         more_posts = true;
     }
     Ok((count, more_posts))
-}
-
-/// Helper function, makes `blog_get` more managable at the expense of memory usage
-/// returns some of the indexes needed for pagination: `current_page`, `prev_page`, `next_page`, and `max_page`
-pub async fn get_indexes(
-    count: u64,
-    max_per_page: u64,
-    page_span: u64,
-    index: Option<u64>,
-) -> Result<(u64, u64, u64, u64), InternalError<anyhow::Error>> {
-    let max_page = match count.checked_div(max_per_page) {
-        Some(mp) => mp,
-        None => {
-            return Err(e500(anyhow::anyhow!(
-                "This should not have happened, worng `max_per_page` parameter"
-            ))
-            .await);
-        }
-    };
-
-    let mut current_page = match index {
-        Some(i) => i,
-        None => 0,
-    };
-    if current_page > max_page {
-        current_page = max_page;
-    }
-    let prev_page = match current_page.checked_sub(page_span) {
-        Some(p) => p,
-        None => 0,
-    };
-    let mut next_page = match current_page.checked_add(page_span) {
-        Some(n) => n,
-        None => {
-            return Err(e400(anyhow::anyhow!(
-                "User has tryied to tamper with `index` query parameter in `/blog` route"
-            ))
-            .await);
-        }
-    };
-    if next_page > max_page {
-        next_page = max_page;
-    }
-
-    Ok((current_page, prev_page, next_page, max_page))
 }
 
 /// Helper function, makes `blog_get` more managable at the expense of memory usage

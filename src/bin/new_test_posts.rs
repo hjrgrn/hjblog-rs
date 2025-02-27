@@ -32,19 +32,31 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let mut stdin = io::stdin().lock();
 
-    let mut amount_str = String::new();
+    let mut posts_amount_str = String::new();
     print!("How many post do you want me to generate(0 to abort)?\n> ");
     std::io::stdout().flush()?;
-    stdin.read_line(&mut amount_str)?;
-    let mut amount: u8 = amount_str.trim().parse()?;
-    if amount == 0 {
+    stdin.read_line(&mut posts_amount_str)?;
+    let mut post_amount: u8 = posts_amount_str.trim().parse()?;
+    if post_amount == 0 {
         println!("Procedure aborted as required.");
         return Ok(());
-    } else if amount > 100 {
-        amount = 100;
+    } else if post_amount > 100 {
+        post_amount = 100;
     }
 
-    for i in 0..amount {
+    let mut comments_amount_str = String::new();
+    print!("How many comments for every post do you want me to generate?\n> ");
+    std::io::stdout().flush()?;
+    stdin.read_line(&mut comments_amount_str)?;
+    let mut comments_amount: u8 = comments_amount_str.trim().parse()?;
+    if comments_amount == 0 {
+        println!("Procedure aborted as required.");
+        return Ok(());
+    } else if comments_amount > 200 {
+        comments_amount = 200;
+    }
+
+    for i in 0..post_amount {
         let title = format!("test-title-{}", i);
         let content = format!("This is a test,\nContent: {}", i);
         let post_id = Uuid::new_v4();
@@ -66,9 +78,34 @@ async fn main() -> Result<(), anyhow::Error> {
                 return Err(e.into());
             }
         }
+
+        for j in 0..comments_amount {
+            let content = format!("Test comment number {}", j);
+            let comment_id = Uuid::new_v4();
+            match query(
+                "INSERT INTO comments (id, post_id, content, author_id) VALUES ($1, $2, $3, $4)",
+            )
+            .bind(comment_id)
+            .bind(post_id)
+            .bind(&content)
+            .bind(&author_id)
+            .execute(&mut connection)
+            .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    if i == 0 {
+                        eprintln!("No comments for post {} has been created", post_id);
+                    } else {
+                        eprintln!("Only {} comments for post {} have been created", j, post_id);
+                    }
+                    return Err(e.into());
+                }
+            }
+        }
     }
 
-    println!("{} posts have been created successfully.", amount);
+    println!("{} posts have been created successfully.", post_amount);
 
     Ok(())
 }

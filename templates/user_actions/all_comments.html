@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="visit_post_container">
+        <!-- TODO: visit author profile -->
+        <p class="visit_post_date">{{ post.posted.format("%d-%m-%Y") }} <a href="#" class="visit_post_author">{{ post.username }}</a></p>
+        <h1 class="visit_post_h1">{{ post.title }}</h1>
+        <p>{{ post.content }}</p>
+        {% if identified %}
+            <br></br>
+            <!-- TODO: delete post -->
+            <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>
+            <br></br>
+            {% include "./includes/modal_delete_post.html" %}
+        {% endif %}
+        {% match current_user %}
+            {% when Some with (cu) %}
+                <a class="visit_post_delete_post" href="/user_actions/comment/{{ post.id }}">Comment</a>
+            {% when None %}
+        {% endmatch %}
+        <br></br>
+        <div class="visit_post_comment">
+            <h2 class="visit_post_comment_h2">Comments</h2>
+            {% if comments.len() > 0 %}
+                {% for comment in comments.iter() %}
+                    <div class="visit_post_comment_container">
+                        <p>{{ comment.content }}</p>
+
+                        {% match current_user %}
+                            {% when Some with (cu) %}
+                                {% if cu.id == post.author_id || cu.id == comment.author_id %}
+                                    <span class="visit_post_delete_comment" onclick="modalShow('modal-delete-comment')">Delete comment</span>
+                                    {% include "./includes/modal_delete_comment.html" %}
+                                {% endif %}
+                            {% when None %}
+                        {% endmatch %}
+                        <span class="visit_post_comment_date">{{ comment.written.format("%d-%m-%Y") }}</span>
+                        <!-- TODO: visit author profile -->
+                        <span class="visit_post_comment_field">author: </span><a href="#" class="visit_post_comment_link">{{ comment.username }}</a>
+                    </div>
+                {% endfor %}
+
+                <!-- FIX: duplication in blog route -->
+                <div class="pagination">
+                    {% if pagination.prev_page > 0 %}
+                        ...
+                    {% endif %}
+
+                    {% if pagination.current_page == 0 %}
+                        {% if pagination.o > 0 %}
+                            <a class="page_num page_offset" href="{{ pagination.get_previous_page_link() }}">Previous comments</a>
+                        {% endif %}
+                    {% endif %}
+
+                    {% for page in 0..pagination.max_page + 1 %}
+                        {% if page >= pagination.prev_page %}
+
+                            {% if page < pagination.current_page %}
+                                <a class="page_num" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                            {% endif %}
+                        {% endif %}
+                        {% if page == pagination.current_page %}
+                            <span class="page_num page_num_main">{{ page }}</span>
+                        {% endif %}
+
+                        {% if page > pagination.current_page %}
+                            {% if page <= pagination.next_page %}
+                                <a class="page_num" href="{{ pagination.get_link(page) }}">{{ page }}</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.next_page < pagination.max_page %}
+                        ...
+                    {% endif %}
+                    {% if pagination.current_page == pagination.max_page %}
+                        {% if pagination.more %}
+                            <a class= "page_num page_offset" href="{{ pagination.get_next_page_link() }}">More Comments</a>
+                        {% endif %}
+                    {% endif %}
+
+                </div>
+            {% else %}
+                <!-- TODO: -->
+            {% endif %}
+        </div>
+    </div>
+{% endblock body %}
