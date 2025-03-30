@@ -65,7 +65,6 @@ cargo run | bunyan
 ```bash
 git clone 'https://github.com/hjrgrn/hjblog-rs'
 cd hjblog-rs
-chmod +x ./scripts/*
 ```
 
 ### Without Docker

@@ -48,6 +48,7 @@
             {% match current_user %}
                 {% when Some with (_) %}
                 {% when None %}
+                    <br></br>
                     <a class="visit_post_delete_post" href="/auth/login">Login</a>
             {% endmatch %}
         </div>
