@@ -38,7 +38,7 @@
                         <span class="visit_post_comment_field">author: </span><a href="#" class="visit_post_comment_link">{{ comment.username }}</a>
                     </div>
                 {% endfor %}
-                    <div class="visit_post_comment_container">
+                    <div class="visit_post_comment_container" style="margin-bottom: 30px;">
                         <!-- TODO: all comments -->
                         <a class="visit_post_comment_all_posts" href="/user_actions/all_comments/{{ post.id }}">All comments →</a>
                     </div>
@@ -48,8 +48,8 @@
             {% match current_user %}
                 {% when Some with (_) %}
                 {% when None %}
-                    <br></br>
                     <a class="visit_post_delete_post" href="/auth/login">Login</a>
+                    <br></br>
             {% endmatch %}
         </div>
     </div>
