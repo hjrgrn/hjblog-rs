@@ -118,14 +118,6 @@ async fn all_comments_displays_comments_if_there_are_comments() {
                 &format!(r#"<a class= "page_num page_offset" href="/user_actions/all_comments/{}?index=0&amp;o=1">More comments</a>"#, post.id)
             ));
         } else if i == max_page + 1 {
-
-            if !body.contains(
-                &format!(r#"<a class="page_num page_offset" href="/user_actions/all_comments/{}?index=0&amp;o=0">Previous comments</a>"#, post.id)
-            ) {
-                println!("\n\npost.id: {}", post.id);
-                println!("\n\n{}\n\n", body);
-            }
-
             assert!(body.contains(
                 &format!(r#"<a class="page_num page_offset" href="/user_actions/all_comments/{}?index=0&amp;o=0">Previous comments</a>"#, post.id)
             ));

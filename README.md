@@ -98,6 +98,7 @@ cargo run --bin ls
 cargo test
 ```
 
+*NOTE*: If you run into `Too many open files` error while testing use `ulimit -n 2048`.
 
 *NOTE*: The scripts are meant to be run inside the root directory of the project.
 
