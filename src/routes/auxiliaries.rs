@@ -62,10 +62,7 @@ impl Pagination {
     }
     /// Get the link for the previous page
     pub fn get_previous_page_link(&self) -> String {
-        let o = match self.o.checked_sub(1) {
-            Some(o) => o,
-            None => 0,
-        };
+        let o = self.o.checked_sub(1).unwrap_or_default();
         format!("{}?index=0&o={}", self.path, o)
     }
     /// Get the link for the next page
@@ -114,17 +111,11 @@ pub async fn get_indexes(
         }
     };
 
-    let mut current_page = match index {
-        Some(i) => i,
-        None => 0,
-    };
+    let mut current_page = index.unwrap_or_default();
     if current_page > max_page {
         current_page = max_page;
     }
-    let prev_page = match current_page.checked_sub(page_span) {
-        Some(p) => p,
-        None => 0,
-    };
+    let prev_page = current_page.checked_sub(page_span).unwrap_or_default();
     let mut next_page = match current_page.checked_add(page_span) {
         Some(n) => n,
         None => {

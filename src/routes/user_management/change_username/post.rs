@@ -64,7 +64,7 @@ pub async fn change_username_post(
         match get_infos_for_username(&form.0, &current_user) {
             Ok(t) => t,
             Err(e) => {
-                FlashMessage::warning(&format!("{}", e)).send();
+                FlashMessage::warning(format!("{}", e)).send();
                 return Ok(HttpResponse::SeeOther()
                     .insert_header((LOCATION, "/profile/change_username"))
                     .finish());
@@ -73,11 +73,11 @@ pub async fn change_username_post(
 
     tracing::Span::current().record(
         "old_username",
-        &tracing::field::display(old_username.as_ref()),
+        tracing::field::display(old_username.as_ref()),
     );
     tracing::Span::current().record(
         "new_username",
-        &tracing::field::display(new_username.as_ref()),
+        tracing::field::display(new_username.as_ref()),
     );
 
     let credentials = BasicCredentials {
@@ -99,7 +99,7 @@ pub async fn change_username_post(
                             .finish(),
                     ));
                 }
-                AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
+                AuthError::UnexpectedError(e) => return Err(e500(e).await),
             };
         }
     }
@@ -116,7 +116,7 @@ pub async fn change_username_post(
         }
         Err(e) => match e {
             UpdateProfileError::InvalidValue(err) => {
-                FlashMessage::warning(&format!("{}", err)).send();
+                FlashMessage::warning(format!("{}", err)).send();
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()
@@ -144,15 +144,14 @@ async fn update_name(
         .fetch_optional(pool)
         .await;
     match res {
-        Ok(opt) => match opt {
-            Some(_) => {
+        Ok(opt) => {
+            if opt.is_some() {
                 return Err(anyhow::anyhow!(
                     "The new name you provided is already taken, please try again."
                 )
                 .into());
             }
-            None => {}
-        },
+        }
         Err(e) => {
             return Err(e.into());
         }

@@ -32,15 +32,11 @@ pub async fn login_get(
             return Err(e500(e.into()).await);
         }
     };
-    match user_id {
-        Some(_) => {
-            FlashMessage::warning("You are already logged in, before logging in again logout.")
-                .send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/"))
-                .finish());
-        }
-        None => {}
+    if user_id.is_some() {
+        FlashMessage::warning("You are already logged in, before logging in again logout.").send();
+        return Ok(HttpResponse::SeeOther()
+            .insert_header((LOCATION, "/"))
+            .finish());
     }
 
     let ctx = LoginTemplate {

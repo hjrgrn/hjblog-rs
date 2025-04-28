@@ -42,7 +42,7 @@ impl RegisterCredentials {
 
         let username = ValidUserName::parse(username)?;
         let email = ValidEmail::parse(email)?;
-        let password = ValidPassword::parse(&password)?;
+        let password = ValidPassword::parse(password)?;
 
         Ok(Self {
             username,
@@ -101,17 +101,14 @@ pub async fn validate_basic_credentials(
     let mut user_id = None;
     let mut expected_password_hash = SecretString::new("$argon2id$v=19$m=19456,t=2,p=1$whUl96AIbUiqrY6CINRAKg$+7nxehFtPiM0dXnxD9Ln0BMEi2SwZFOf8YDlXzJd8TU".into());
     if let Some((stored_user_id, stored_password_hash)) =
-        get_stored_credentials(&credentials.username.as_ref(), &pool).await?
+        get_stored_credentials(credentials.username.as_ref(), pool).await?
     {
         user_id = Some(stored_user_id);
         expected_password_hash = stored_password_hash;
     };
 
     spawn_blocking_with_tracing(move || {
-        verify_password_hash(
-            &expected_password_hash,
-            credentials.password.as_ref(),
-        )
+        verify_password_hash(&expected_password_hash, credentials.password.as_ref())
     })
     .await
     .context("Failed to spawn blocking task")??;
@@ -164,7 +161,6 @@ pub fn verify_password_hash(
     expected_password_hash: &SecretString,
     password_candidate: &SecretString,
 ) -> Result<(), AuthError> {
-
     let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
         .context("Failed to parse hash in PHC string format.")?;
 
@@ -193,22 +189,22 @@ pub async fn register_user(
     admin: bool,
 ) -> Result<Uuid, RegisterError> {
     let user_id = Uuid::new_v4();
-    let row = sqlx::query("SELECT id FROM users WHERE username = $1")
+    if sqlx::query("SELECT id FROM users WHERE username = $1")
         .bind(credentials.username.as_ref())
         .fetch_optional(pool)
-        .await?;
-    match row {
-        Some(_) => return Err(anyhow::anyhow!("Your credentials are already taken.").into()),
-        None => {}
+        .await?
+        .is_some()
+    {
+        return Err(anyhow::anyhow!("Your credentials are already taken.").into());
     }
 
-    let row = sqlx::query("SELECT id FROM users WHERE email = $1")
+    if sqlx::query("SELECT id FROM users WHERE email = $1")
         .bind(credentials.email.as_ref())
         .fetch_optional(pool)
-        .await?;
-    match row {
-        Some(_) => return Err(anyhow::anyhow!("Your credentials are already taken.").into()),
-        None => {}
+        .await?
+        .is_some()
+    {
+        return Err(anyhow::anyhow!("Your credentials are already taken.").into());
     }
 
     let salt = SaltString::generate(OsRng);

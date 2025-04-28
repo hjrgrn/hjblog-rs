@@ -47,21 +47,17 @@ pub async fn login_post(
             return Err(e500(e.into()).await);
         }
     };
-    match user_id {
-        Some(_) => {
-            FlashMessage::warning("You are already logged in, before logging in again logout.")
-                .send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/"))
-                .finish());
-        }
-        None => {}
+    if user_id.is_some() {
+        FlashMessage::warning("You are already logged in, before logging in again logout.").send();
+        return Ok(HttpResponse::SeeOther()
+            .insert_header((LOCATION, "/"))
+            .finish());
     }
 
     let username = match ValidUserName::parse(&form.0.username) {
         Ok(n) => n,
         Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
+            FlashMessage::warning(format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/profile/change_username"))
                 .finish());
@@ -70,7 +66,7 @@ pub async fn login_post(
     let password = match ValidPassword::parse(&form.0.password) {
         Ok(p) => p,
         Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
+            FlashMessage::warning(format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/profile/change_username"))
                 .finish());
@@ -79,11 +75,11 @@ pub async fn login_post(
 
     let credentials = BasicCredentials { username, password };
 
-    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
+    tracing::Span::current().record("username", tracing::field::display(&credentials.username));
 
     match validate_basic_credentials(credentials, &pool).await {
         Ok(user_id) => {
-            tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            tracing::Span::current().record("user_id", tracing::field::display(&user_id));
             session.renew();
             match session.insert_user_id(user_id) {
                 Ok(_) => {}
@@ -122,7 +118,7 @@ pub async fn login_post(
                             .finish(),
                     ));
                 }
-                AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
+                AuthError::UnexpectedError(e) => return Err(e500(e).await),
             };
         }
     }

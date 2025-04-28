@@ -39,7 +39,7 @@ pub async fn index_get(
 
     let posts = match get_posts(&pool).await {
         Ok(p) => {
-            if p.len() == 0 {
+            if p.is_empty() {
                 None
             } else {
                 Some(p)

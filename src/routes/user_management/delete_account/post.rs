@@ -60,13 +60,13 @@ pub async fn delete_account_post(
         }
     };
 
-    tracing::Span::current().record("username", &tracing::field::display(&current_user.username));
-    tracing::Span::current().record("user_id", &tracing::field::display(&current_user.id));
+    tracing::Span::current().record("username", tracing::field::display(&current_user.username));
+    tracing::Span::current().record("user_id", tracing::field::display(&current_user.id));
 
     let (password, username) = match get_infos_for_delete_account(&form, &current_user) {
         Ok(t) => t,
         Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
+            FlashMessage::warning(format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/profile/change_username"))
                 .finish());
@@ -89,7 +89,7 @@ pub async fn delete_account_post(
                             .finish(),
                     ));
                 }
-                AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
+                AuthError::UnexpectedError(e) => return Err(e500(e).await),
             };
         }
     }
@@ -106,7 +106,7 @@ pub async fn delete_account_post(
         Err(e) => match e {
             UpdateProfileError::InvalidValue(err) => {
                 // NOTE: This should not happen
-                FlashMessage::warning(&format!("{}", err)).send();
+                FlashMessage::warning(format!("{}", err)).send();
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()
@@ -129,7 +129,7 @@ async fn delete_account(pool: &PgPool, user_id: &Uuid) -> Result<(), UpdateProfi
         .bind(user_id)
         .execute(pool)
         .await
-        .map_err(|e| UpdateProfileError::UnexpectedError(e))?;
+        .map_err(UpdateProfileError::UnexpectedError)?;
     Ok(())
 }
 

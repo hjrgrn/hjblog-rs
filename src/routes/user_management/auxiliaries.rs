@@ -45,8 +45,8 @@ pub async fn user_management_get_requests(
     pool: &PgPool,
     mode: Mode,
 ) -> Result<impl Responder, actix_web::error::InternalError<anyhow::Error>> {
-    let flash_messages = get_flash_messages(&messages);
-    let current_user = match session.get_current_user(&pool).await {
+    let flash_messages = get_flash_messages(messages);
+    let current_user = match session.get_current_user(pool).await {
         Ok(opt) => {
             match opt {
                 Some(cu) => cu,
@@ -119,7 +119,7 @@ pub async fn user_management_get_requests(
         }
         Mode::ManageProfile => {
             let ctx = ManageProfileTemplate {
-                title: Some(format!("Manage your profile {}", current_user.username).into()),
+                title: Some(format!("Manage your profile {}", current_user.username)),
                 flash_messages,
                 current_user,
             };
