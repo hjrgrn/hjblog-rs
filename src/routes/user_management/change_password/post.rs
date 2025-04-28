@@ -60,7 +60,7 @@ pub async fn change_password_post(
     let old_password = match ValidPassword::parse(&form.0.old_password) {
         Ok(p) => p,
         Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
+            FlashMessage::warning(format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/profile/change_username"))
                 .finish());
@@ -70,7 +70,7 @@ pub async fn change_password_post(
     let new_password = match ValidPassword::parse(&form.0.new_password) {
         Ok(p) => p,
         Err(e) => {
-            FlashMessage::warning(&format!("{}", e)).send();
+            FlashMessage::warning(format!("{}", e)).send();
             return Ok(HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/profile/change_username"))
                 .finish());
@@ -83,7 +83,7 @@ pub async fn change_password_post(
             // NOTE: this should not happen, if this happens we have
             // corrupted data in the database
             let err = format!("This shouldn't have happened, we probabily have corrupted data in the database:\n{e}");
-            return Err(e500(anyhow::anyhow!(err).into()).await);
+            return Err(e500(anyhow::anyhow!(err)).await);
         }
     };
 
@@ -106,7 +106,7 @@ pub async fn change_password_post(
                             .finish(),
                     ));
                 }
-                AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
+                AuthError::UnexpectedError(e) => return Err(e500(e).await),
             };
         }
     }
@@ -120,7 +120,7 @@ pub async fn change_password_post(
         Err(e) => match e {
             UpdateProfileError::InvalidValue(err) => {
                 // This should not happen
-                FlashMessage::warning(&format!("{}", err)).send();
+                FlashMessage::warning(format!("{}", err)).send();
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()

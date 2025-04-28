@@ -65,7 +65,7 @@ pub async fn change_email_post(
         match get_infos_for_email(&form.0, &current_user) {
             Ok(t) => t,
             Err(e) => {
-                FlashMessage::warning(&format!("{}", e)).send();
+                FlashMessage::warning(format!("{}", e)).send();
                 return Ok(HttpResponse::SeeOther()
                     .insert_header((LOCATION, "/profile/change_email"))
                     .finish());
@@ -74,8 +74,8 @@ pub async fn change_email_post(
 
     let credentials = BasicCredentials { username, password };
 
-    tracing::Span::current().record("old_email", &tracing::field::display(old_email.as_ref()));
-    tracing::Span::current().record("new_email", &tracing::field::display(new_email.as_ref()));
+    tracing::Span::current().record("old_email", tracing::field::display(old_email.as_ref()));
+    tracing::Span::current().record("new_email", tracing::field::display(new_email.as_ref()));
 
     match validate_basic_credentials(credentials, &pool).await {
         Ok(_) => {}
@@ -91,7 +91,7 @@ pub async fn change_email_post(
                             .finish(),
                     ));
                 }
-                AuthError::UnexpectedError(e) => return Err(e500(e.into()).await),
+                AuthError::UnexpectedError(e) => return Err(e500(e).await),
             };
         }
     }
@@ -108,7 +108,7 @@ pub async fn change_email_post(
         }
         Err(e) => match e {
             UpdateProfileError::InvalidValue(err) => {
-                FlashMessage::warning(&format!("{}", err)).send();
+                FlashMessage::warning(format!("{}", err)).send();
                 return Err(InternalError::from_response(
                     err,
                     HttpResponse::SeeOther()
@@ -136,15 +136,14 @@ async fn update_email(
         .fetch_optional(pool)
         .await;
     match res {
-        Ok(opt) => match opt {
-            Some(_) => {
+        Ok(opt) => {
+            if opt.is_some() {
                 return Err(anyhow::anyhow!(
                     "The new email you provided is already taken, please try again."
                 )
                 .into());
             }
-            None => {}
-        },
+        }
         Err(e) => {
             return Err(e.into());
         }

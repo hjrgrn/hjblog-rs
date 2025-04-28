@@ -53,8 +53,8 @@ pub async fn comment_post_post(
         }
     };
 
-    tracing::Span::current().record("username", &tracing::field::display(current_user.username));
-    tracing::Span::current().record("user_id", &tracing::field::display(current_user.id));
+    tracing::Span::current().record("username", tracing::field::display(current_user.username));
+    tracing::Span::current().record("user_id", tracing::field::display(current_user.id));
 
     // IDEA: istead of querying the database just try INSERT
     // and match on the error type returned

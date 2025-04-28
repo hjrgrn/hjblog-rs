@@ -31,7 +31,7 @@ pub async fn logout(
                 .finish());
         }
     };
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+    tracing::Span::current().record("user_id", tracing::field::display(&user_id));
     FlashMessage::info("See you space cowboy...").send();
     session.logout();
     return Ok(HttpResponse::SeeOther()

@@ -56,8 +56,8 @@ pub async fn new_post_post(
             return Err(e500(e.into()).await);
         }
     };
-    tracing::Span::current().record("username", &tracing::field::display(&current_user.username));
-    tracing::Span::current().record("user_id", &tracing::field::display(&current_user.id));
+    tracing::Span::current().record("username", tracing::field::display(&current_user.username));
+    tracing::Span::current().record("user_id", tracing::field::display(&current_user.id));
 
     if form.title.len() > 60 {
         FlashMessage::warning("Title is too long, retry").send();
@@ -87,7 +87,7 @@ pub async fn new_post_post(
         .bind(Uuid::new_v4())
         .bind(&form.title)
         .bind(&form.content)
-        .bind(&current_user.id)
+        .bind(current_user.id)
         .execute(pool.as_ref())
         .await
     {

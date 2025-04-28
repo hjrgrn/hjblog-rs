@@ -95,13 +95,7 @@ pub async fn visit_post_get(
     };
 
     let identified = match &current_user {
-        Some(cu) => {
-            if post.author_id == cu.id {
-                true
-            } else {
-                false
-            }
-        }
+        Some(cu) => post.author_id == cu.id,
         None => false,
     };
 

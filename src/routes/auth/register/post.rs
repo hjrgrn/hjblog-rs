@@ -47,15 +47,11 @@ pub async fn register_post(
             return Err(e500(e.into()).await);
         }
     };
-    match user_id {
-        Some(_) => {
-            FlashMessage::warning("You are already registered, before register again logout.")
-                .send();
-            return Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/"))
-                .finish());
-        }
-        None => {}
+    if user_id.is_some() {
+        FlashMessage::warning("You are already registered, before register again logout.").send();
+        return Ok(HttpResponse::SeeOther()
+            .insert_header((LOCATION, "/"))
+            .finish());
     }
 
     let credentials = match RegisterCredentials::parse(
@@ -75,13 +71,13 @@ pub async fn register_post(
 
     tracing::Span::current().record(
         "username",
-        &tracing::field::display(&credentials.get_username()),
+        tracing::field::display(&credentials.get_username()),
     );
-    tracing::Span::current().record("email", &tracing::field::display(&credentials.get_email()));
+    tracing::Span::current().record("email", tracing::field::display(&credentials.get_email()));
 
     match register_user(&credentials, &pool, false).await {
         Ok(user_id) => {
-            tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            tracing::Span::current().record("user_id", tracing::field::display(&user_id));
             session.renew();
             match session.insert_user_id(user_id) {
                 Ok(_) => {}

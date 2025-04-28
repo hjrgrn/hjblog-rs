@@ -131,7 +131,7 @@ pub async fn get_count(
     };
     let count = if count < 0 { 0 } else { count as u64 };
 
-    let mut count = match count.checked_sub(offset.into()) {
+    let mut count = match count.checked_sub(offset) {
         Some(c) => c,
         None => {
             return Err(e400(anyhow::anyhow!(
