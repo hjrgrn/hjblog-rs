@@ -7,7 +7,7 @@ async fn responds_with_404_when_requiring_an_unexisting_page() {
     // Act
     let response = test_app
         .api_client
-        .get(&format!("{}/non-existing-page", &test_app.get_full_url()))
+        .get(format!("{}/non-existing-page", &test_app.get_full_url()))
         .send()
         .await
         .expect("Failed to execute request.");

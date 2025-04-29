@@ -173,7 +173,7 @@ async fn refuse_invalid_email() {
         (
             &username,
             &password,
-            &invalid_email,
+            invalid_email,
             &invalid_email_error_msg,
         ),
     ];

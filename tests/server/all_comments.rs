@@ -48,7 +48,7 @@ async fn all_comments_displays_comments_if_there_are_comments() {
     let page_span = 3;
     let mut page_amount = comment_num / max_per_page;
     if comment_num % max_per_page != 0 {
-        page_amount = page_amount + 1;
+        page_amount += 1;
     }
 
     let test_app = spawn_app().await;

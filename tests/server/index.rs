@@ -7,7 +7,7 @@ async fn testing_index_template_when_no_posts() {
 
     let response = test_app
         .api_client
-        .get(&format!("{}/", &test_app.get_full_url()))
+        .get(format!("{}/", &test_app.get_full_url()))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -40,7 +40,7 @@ async fn testing_navbar_when_logged_as_admin() {
 
     let response = test_app
         .api_client
-        .get(&format!("{}/", &test_app.get_full_url()))
+        .get(format!("{}/", &test_app.get_full_url()))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -68,7 +68,7 @@ async fn testing_navbar_when_not_logged() {
 
     let response = test_app
         .api_client
-        .get(&format!("{}/", &test_app.get_full_url()))
+        .get(format!("{}/", &test_app.get_full_url()))
         .send()
         .await
         .expect("Failed to execute request.");

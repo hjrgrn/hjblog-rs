@@ -26,7 +26,7 @@ async fn blog_displays_posts_if_there_are_posts() {
     let page_span = 3;
     let mut page_amount = post_num / max_per_page;
     if post_num % max_per_page != 0 {
-        page_amount = page_amount + 1;
+        page_amount += 1;
     }
 
     let test_app = spawn_app().await;
@@ -72,7 +72,7 @@ async fn blog_displays_posts_if_there_are_posts() {
                 r#"class="post_card_author">{}</a>"#,
                 &test_app.test_admin.username
             )));
-            post_num = post_num - 1;
+            post_num -= 1;
             assert!(body.contains(&format!(r#"Content: {}</p>"#, post_num)));
         }
         assert!(!body.contains(&format!(r#"Content: {}</p>"#, post_num - 1)));
