@@ -75,14 +75,13 @@ async fn get_username(
         .fetch_optional(connection)
         .await
     {
-        Ok(r) => match r {
-            Some(_) => {
+        Ok(r) => {
+            if r.is_some() {
                 return Err(anyhow::anyhow!(
                     "The name you typed is already taken, try again."
                 ));
             }
-            None => {}
-        },
+        }
         Err(e) => return Err(e.into()),
     };
 
@@ -104,14 +103,13 @@ async fn get_email(
         .fetch_optional(connection)
         .await
     {
-        Ok(r) => match r {
-            Some(_) => {
+        Ok(r) => {
+            if r.is_some() {
                 return Err(anyhow::anyhow!(
                     "The email you typed is already registered, try again."
                 ));
             }
-            None => {}
-        },
+        }
         Err(e) => {
             return Err(e.into());
         }
@@ -148,9 +146,9 @@ fn get_hash_pass() -> Result<String, anyhow::Error> {
         }
     }
     disable_raw_mode()?;
-    println!("");
+    println!();
 
-    let password = ValidPassword::parse(&SecretString::new(format!("{}", password.trim()).into()))?;
+    let password = ValidPassword::parse(&SecretString::new(password.trim().to_string().into()))?;
 
     let salt = SaltString::generate(OsRng);
     Ok(Argon2::default()

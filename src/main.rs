@@ -17,7 +17,7 @@ async fn main() -> io::Result<()> {
         .acquire_timeout(std::time::Duration::from_secs(2))
         .connect_lazy_with(config.database.with_db());
 
-    let listener = TcpListener::bind(&config.server.get_full_address())?;
+    let listener = TcpListener::bind(config.server.get_full_address())?;
     run(
         listener,
         connection_pool,

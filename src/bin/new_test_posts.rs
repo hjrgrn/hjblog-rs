@@ -64,7 +64,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .bind(post_id)
             .bind(&title)
             .bind(&content)
-            .bind(&author_id)
+            .bind(author_id)
             .execute(&mut connection)
             .await
         {
@@ -88,7 +88,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .bind(comment_id)
             .bind(post_id)
             .bind(&content)
-            .bind(&author_id)
+            .bind(author_id)
             .execute(&mut connection)
             .await
             {

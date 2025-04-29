@@ -39,7 +39,7 @@ impl TestApp {
 
     pub async fn get_request(&self, path: &str) -> Result<reqwest::Response, reqwest::Error> {
         self.api_client
-            .get(&format!("{}{}", &self.get_full_url(), path))
+            .get(format!("{}{}", &self.get_full_url(), path))
             .send()
             .await
     }
@@ -50,11 +50,11 @@ impl TestApp {
         path: &str,
     ) -> reqwest::Response {
         self.api_client
-            .post(&format!("{}{}", &self.get_full_url(), path))
+            .post(format!("{}{}", &self.get_full_url(), path))
             .form(body)
             .send()
             .await
-            .expect(&format!("Failed to request \"{}\"", path))
+            .unwrap_or_else(|_| panic!("Failed to request \"{}\"", path))
     }
 
     pub async fn generate_posts(&self, amount: u16) {
@@ -180,7 +180,7 @@ pub async fn spawn_app() -> TestApp {
     let db_pool = configure_database(&config.database).await;
 
     let listener =
-        TcpListener::bind(&config.server.get_full_address()).expect("Failed to bind TcpListener");
+        TcpListener::bind(config.server.get_full_address()).expect("Failed to bind TcpListener");
     let port = listener
         .local_addr()
         .expect("Failed to obtain local address from TcpListener.")
@@ -252,21 +252,13 @@ async fn switch(listener: TcpListener, token: CancellationToken, config: Setting
             connection_to_db.close().await;
             let mut connection_to_postgres = PgConnection::connect_with(&config.database.without_db())
                 .await
-                .expect(
-                    &format!(
-                        "Failed to close and delete test database {}",
-                        &config.database.database_name
-                    )
-                );
+                .unwrap_or_else(|_| panic!("Failed to close and delete test database {}",
+                    &config.database.database_name));
             connection_to_postgres
                 .execute(format!(r#"DROP DATABASE "{}" WITH (FORCE)"#, config.database.database_name).as_str())
                 .await
-                .expect(
-                    &format!(
-                        "Failed to close and delete test database {}",
-                        &config.database.database_name
-                    )
-                );
+                .unwrap_or_else(|_| panic!("Failed to close and delete test database {}",
+                    &config.database.database_name));
             connection_to_postgres.close().await.expect("Failed to close connection to Postgres instance.");
         }
         _ = run(
