@@ -95,7 +95,15 @@ pub async fn visit_post_get(
     };
 
     let identified = match &current_user {
-        Some(cu) => post.author_id == cu.id,
+        Some(cu) => {
+            if cu.is_admin {
+                true
+            } else if post.author_id == cu.id {
+                true
+            } else {
+                false
+            }
+        }
         None => false,
     };
 
