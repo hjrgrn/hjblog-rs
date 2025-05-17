@@ -14,7 +14,7 @@ use crate::{
 };
 
 // TODO: comment, telemetry, refactoring, custom error
-pub async fn delete_post_post(
+pub async fn delete_post_get(
     pool: web::Data<PgPool>,
     session: TypedSession,
     post_id: Path<Uuid>,

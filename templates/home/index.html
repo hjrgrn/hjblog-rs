@@ -13,7 +13,7 @@
             {% for i in 0..p.len() %}
                 <div class="posts_compact_container">
                     <span class="posts_compact_index">{{ i }}</span>
-                    <a class="posts_compact_link" href="{{ p[i].get_path() }}">{{ p[i].title}}</a>
+                    <a class="posts_compact_link" href="{{ p[i].visit_post() }}">{{ p[i].title}}</a>
                     <span class="posts_compact_date">{{ p[i].posted.format("%d-%m-%Y %H:%M") }}</span>
                     <span class="posts_compact_author">{{ p[i].username }}</span>
                 </div>

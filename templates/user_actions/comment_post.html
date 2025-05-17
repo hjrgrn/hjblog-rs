@@ -6,6 +6,16 @@
             post.username }}</a></p>
     <h1 class="visit_post_h1">{{ post.title }}</h1>
     <p>{{ post.content }}</p>
+    {% match current_user %}
+        {% when Some with (cu) %}
+            {% if cu.is_admin %}
+                <br></br>
+                <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>
+                <br></br>
+                {% include "./includes/modal_delete_post.html" %}
+            {% endif %}
+        {% when None %}
+    {% endmatch %}
 
     <br></br>
     <div>
