@@ -48,6 +48,11 @@ pub async fn delete_post_get(
         Ok(t) => t,
         Err(e) => return Err(e500(e.into()).await),
     };
+    let query = sqlx::query("SELECT FROM posts WHERE (id = $1) FOR UPDATE").bind(post_id);
+    match transaction.execute(query).await {
+        Ok(_) => {}
+        Err(e) => return Err(e500(e.into()).await),
+    };
     let query = sqlx::query("DELETE FROM posts WHERE (id = $1)").bind(post_id);
     match transaction.execute(query).await {
         Ok(_) => {}
