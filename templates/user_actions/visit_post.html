@@ -8,7 +8,6 @@
         <p>{{ post.content }}</p>
         {% match current_user %}
             {% when Some with (cu) %}
-                <!-- TODO: delete post -->
                 {% if identified %}
                     <br></br>
                     <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>

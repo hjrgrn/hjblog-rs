@@ -13,8 +13,11 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn get_path(&self) -> String {
+    pub fn visit_post(&self) -> String {
         format!("/user_actions/visit_post/{}", self.id)
+    }
+    pub fn delete_post(&self) -> String {
+        format!("/user_actions/delete_post/{}", self.id)
     }
 }
 

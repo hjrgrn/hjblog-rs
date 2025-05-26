@@ -6,15 +6,14 @@
         <p class="visit_post_date">{{ post.posted.format("%d-%m-%Y") }} <a href="#" class="visit_post_author">{{ post.username }}</a></p>
         <h1 class="visit_post_h1">{{ post.title }}</h1>
         <p>{{ post.content }}</p>
-        {% if identified %}
-            <br></br>
-            <!-- TODO: delete post -->
-            <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>
-            <br></br>
-            {% include "./includes/modal_delete_post.html" %}
-        {% endif %}
         {% match current_user %}
             {% when Some with (cu) %}
+                {% if cu.is_admin %}
+                    <br></br>
+                    <button onclick="modalShow('modal-delete')" class="visit_post_delete_post">Delete this post</button>
+                    <br></br>
+                    {% include "./includes/modal_delete_post.html" %}
+                {% endif %}
                 <a class="visit_post_delete_post" href="/user_actions/comment/{{ post.id }}">Comment</a>
             {% when None %}
         {% endmatch %}

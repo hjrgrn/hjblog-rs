@@ -3,6 +3,7 @@ use actix_web::{web, Scope};
 use super::{
     all_comments::all_comments_get,
     comment::{get::comment_post_get, post::comment_post_post},
+    delete_post::delete_post_get,
     new_post::{get::new_post_get, post::new_post_post},
     visit_post::visit_post_get,
 };
@@ -15,4 +16,5 @@ pub fn user_actions_scope() -> Scope {
         .route("/comment/{post_id}", web::get().to(comment_post_get))
         .route("/comment/{post_id}", web::post().to(comment_post_post))
         .route("/all_comments/{post_id}", web::get().to(all_comments_get))
+        .route("/delete_post/{post_id}", web::get().to(delete_post_get))
 }

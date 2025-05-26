@@ -25,7 +25,6 @@ pub struct AllCommentsTemplate {
     pub current_user: Option<CurrentUser>,
     pub post: Post,
     pub flash_messages: Option<Vec<FormattedFlashMessage>>,
-    pub identified: bool,
     pub comments: Vec<Comment>,
     pub pagination: Pagination,
 }
@@ -82,17 +81,6 @@ pub async fn all_comments_get(
         }
     };
 
-    let identified = match &current_user {
-        Some(cu) => {
-            if cu.is_admin {
-                true
-            } else {
-                cu.id == post.author_id
-            }
-        }
-        None => false,
-    };
-
     if count == 0 {
         if offset > 0 {
             return Err(e400(anyhow::anyhow!(
@@ -117,7 +105,6 @@ pub async fn all_comments_get(
             post,
             flash_messages,
             pagination,
-            identified,
             comments: Vec::new(),
         });
     }
@@ -149,7 +136,6 @@ pub async fn all_comments_get(
         post,
         flash_messages,
         pagination,
-        identified,
         comments,
     })
 }
