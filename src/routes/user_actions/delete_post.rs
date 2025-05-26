@@ -13,7 +13,6 @@ use crate::{
     session_state::TypedSession,
 };
 
-// TODO: comment, telemetry, refactoring, custom error
 pub async fn delete_post_get(
     pool: web::Data<PgPool>,
     session: TypedSession,
@@ -44,34 +43,39 @@ pub async fn delete_post_get(
         Err(e) => return Err(e500(e.into()).await),
     };
 
-    let mut transaction = match pool.begin().await {
-        Ok(t) => t,
-        Err(e) => return Err(e500(e.into()).await),
-    };
-    let query = sqlx::query("SELECT FROM posts WHERE (id = $1) FOR UPDATE").bind(post_id);
-    match transaction.execute(query).await {
-        Ok(_) => {}
-        Err(e) => return Err(e500(e.into()).await),
-    };
-    let query = sqlx::query("DELETE FROM posts WHERE (id = $1)").bind(post_id);
-    match transaction.execute(query).await {
-        Ok(_) => {}
-        Err(e) => return Err(e500(e.into()).await),
-    };
-    let query = sqlx::query("DELETE FROM comments WHERE (post_id = $1)").bind(post_id);
-    match transaction.execute(query).await {
-        Ok(_) => {}
-        Err(e) => return Err(e500(e.into()).await),
-    };
+    delete_post(&pool, &post_id).await?;
 
-    match transaction.commit().await {
-        Ok(_) => {}
-        Err(e) => return Err(e500(e.into()).await),
-    }
-
-    // TODO: better message
     FlashMessage::info("The post has been deleted correctly").send();
     Ok(HttpResponse::SeeOther()
         .insert_header((LOCATION, "/"))
         .finish())
+}
+
+#[tracing::instrument(name = "Delete post and relative comments", skip(pool, post_id), fields(post_id = %post_id))]
+async fn delete_post(pool: &PgPool, post_id: &Uuid) -> Result<(), InternalError<anyhow::Error>> {
+    let mut transaction = match pool.begin().await {
+        Ok(t) => t,
+        Err(e) => return Err(e500(e.into()).await),
+    };
+
+    let query = sqlx::query("SELECT FROM posts WHERE (id = $1) FOR UPDATE").bind(post_id);
+    if let Err(e) = transaction.execute(query).await {
+        return Err(e500(e.into()).await);
+    };
+
+    let query = sqlx::query("DELETE FROM posts WHERE (id = $1)").bind(post_id);
+    if let Err(e) = transaction.execute(query).await {
+        return Err(e500(e.into()).await);
+    };
+
+    let query = sqlx::query("DELETE FROM comments WHERE (post_id = $1)").bind(post_id);
+    if let Err(e) = transaction.execute(query).await {
+        return Err(e500(e.into()).await);
+    };
+
+    if let Err(e) = transaction.commit().await {
+        return Err(e500(e.into()).await);
+    };
+
+    Ok(())
 }
