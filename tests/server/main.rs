@@ -6,6 +6,7 @@ mod change_password;
 mod change_username;
 mod comment_post;
 mod delete_account;
+mod delete_post;
 mod errors;
 mod health_check;
 mod index;
