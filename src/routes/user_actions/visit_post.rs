@@ -98,10 +98,8 @@ pub async fn visit_post_get(
         Some(cu) => {
             if cu.is_admin {
                 true
-            } else if post.author_id == cu.id {
-                true
             } else {
-                false
+                post.author_id == cu.id
             }
         }
         None => false,
