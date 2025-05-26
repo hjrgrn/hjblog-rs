@@ -43,7 +43,7 @@ pub async fn delete_post_get(
         Err(e) => return Err(e500(e.into()).await),
     };
 
-    delete_post(&pool, &post_id).await?;
+    delete_post_and_comments(&pool, &post_id).await?;
 
     FlashMessage::info("The post has been deleted correctly").send();
     Ok(HttpResponse::SeeOther()
@@ -52,7 +52,7 @@ pub async fn delete_post_get(
 }
 
 #[tracing::instrument(name = "Delete post and relative comments", skip(pool, post_id), fields(post_id = %post_id))]
-async fn delete_post(pool: &PgPool, post_id: &Uuid) -> Result<(), InternalError<anyhow::Error>> {
+async fn delete_post_and_comments(pool: &PgPool, post_id: &Uuid) -> Result<(), InternalError<anyhow::Error>> {
     let mut transaction = match pool.begin().await {
         Ok(t) => t,
         Err(e) => return Err(e500(e.into()).await),
